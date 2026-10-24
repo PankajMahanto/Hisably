@@ -1,0 +1,3235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HISABLY</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- html2pdf for direct 1-click PDF file download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .sheet-container {
+      max-height: 540px;
+      overflow: auto;
+    }
+    .sheet-table {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .sheet-table th,
+    .sheet-table td {
+      border-right: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .sheet-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background-color: #1e293b;
+      color: #f8fafc;
+    }
+    .sheet-table tfoot td {
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
+      background-color: #f8fafc;
+      font-weight: 700;
+      border-top: 2px solid #94a3b8;
+    }
+    .sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 15;
+      background-color: #f8fafc;
+    }
+    .sheet-table thead th.sticky-col {
+      z-index: 30;
+      background-color: #0f172a;
+    }
+    .sheet-table tfoot td.sticky-col {
+      z-index: 30;
+      background-color: #e2e8f0;
+    }
+    .meal-input {
+      width: 64px;
+      text-align: center;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      padding: 6px 2px;
+      border-radius: 4px;
+      transition: all 0.12s ease;
+    }
+    .meal-input:focus {
+      outline: 2px solid #2563eb;
+      background-color: #eff6ff;
+    }
+    .meal-input:hover:not(:focus) {
+      background-color: #f1f5f9;
+    }
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .sheet-container {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+      body {
+        background: white;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-14">
+
+  <!-- Top Navigation & Month Switcher Bar -->
+  <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-40 no-print">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-600 flex items-center justify-center text-white font-bold text-lg shadow">
+          <i class="fa-solid fa-gem"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 id="messTitleHeader" class="text-lg font-bold tracking-tight">Hisably</h1>
+            <span class="text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Running
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Manager: <strong class="text-slate-200">Pankaj Mahanta</strong> • Auto Meal, Deposit, Cost & Audit Log</p>
+        </div>
+      </div>
+
+      <!-- Month, Year, Share, PDF & Access Controls -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          onclick="openAccessControlModal()"
+          id="accessStatusBtn"
+          class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition"
+          title="Manage member edit permissions & manager PIN"
+        >
+          <i class="fa-solid fa-user-shield"></i>
+          <span id="accessStatusText">Manager Mode</span>
+        </button>
+
+        <button
+          onclick="toggleQuickLock()"
+          id="quickLockBtn"
+          class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition"
+          title="Lock or unlock editing"
+        >
+          <i class="fa-solid fa-lock"></i>
+          <span id="quickLockBtnText">Lock (View-Only)</span>
+        </button>
+
+        <div class="flex items-center bg-slate-800 border border-slate-700 rounded-lg p-1">
+          <button onclick="stepMonth(-1)" title="Previous Month" class="px-2 py-1 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+          <select id="monthSelect" onchange="switchMonthYear()" class="bg-transparent text-xs font-semibold px-1.5 py-1 focus:outline-none cursor-pointer text-emerald-400">
+            <option value="0" class="bg-slate-800 text-white">January</option>
+            <option value="1" class="bg-slate-800 text-white">February</option>
+            <option value="2" class="bg-slate-800 text-white">March</option>
+            <option value="3" class="bg-slate-800 text-white">April</option>
+            <option value="4" class="bg-slate-800 text-white">May</option>
+            <option value="5" class="bg-slate-800 text-white">June</option>
+            <option value="6" class="bg-slate-800 text-white">July</option>
+            <option value="7" class="bg-slate-800 text-white">August</option>
+            <option value="8" class="bg-slate-800 text-white">September</option>
+            <option value="9" class="bg-slate-800 text-white">October</option>
+            <option value="10" class="bg-slate-800 text-white">November</option>
+            <option value="11" class="bg-slate-800 text-white">December</option>
+          </select>
+          <select id="yearSelect" onchange="switchMonthYear()" class="bg-transparent text-xs font-semibold px-1.5 py-1 focus:outline-none cursor-pointer text-white">
+            <option value="2025" class="bg-slate-800">2025</option>
+            <option value="2026" class="bg-slate-800">2026</option>
+            <option value="2027" class="bg-slate-800">2027</option>
+            <option value="2028" class="bg-slate-800">2028</option>
+          </select>
+          <button onclick="stepMonth(1)" title="Next Month" class="px-2 py-1 hover:bg-slate-700 rounded text-slate-300 hover:text-white transition">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </div>
+
+        <button onclick="openShareAndEmailModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow transition animate-pulse" title="Google Sites ছাড়া লাইভ লিংক তৈরি ও ইমেইল নোটিফিকেশন">
+          <i class="fa-solid fa-share-nodes"></i> লাইভ লিংক ও শেয়ার (No Google Sites)
+        </button>
+
+        <button onclick="openPdfReportModal()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow transition" title="Preview & Download Mess Manager Style PDF Report">
+          <i class="fa-solid fa-file-pdf"></i> Download PDF Report
+        </button>
+
+        <button onclick="openCarryForwardModal()" class="edit-only-control bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow transition" title="Start Next Month & Carry Forward Balances">
+          <i class="fa-solid fa-forward-step"></i> Start New Month
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 pt-5 space-y-6">
+
+    <!-- View-Only Mode Notice Banner -->
+    <div id="viewOnlyBanner" class="hidden bg-amber-50 border border-amber-300 rounded-xl p-3.5 flex-wrap items-center justify-between gap-3 shadow-sm no-print">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center text-sm shadow">
+          <i class="fa-solid fa-eye"></i>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-amber-900 flex items-center gap-2">
+            <span>VIEW-ONLY MODE ACTIVE (শুধু দেখার মোড চালু আছে)</span>
+            <span id="activeViewerLabel" class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full text-[10px] font-bold">Viewer</span>
+          </div>
+          <p class="text-[11px] text-amber-700">সাধারণ মেম্বাররা শুধু হিসাব দেখতে পারবে। এডিট করতে ডানপাশের বাটনে ক্লিক করে Manager PIN দিন।</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openPinUnlockModal()" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-key"></i> Unlock with Manager PIN
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs & Live Save Indicator -->
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3 no-print">
+      <div class="flex flex-wrap gap-1.5">
+        <button onclick="switchTab('all')" id="tab-all" class="tab-btn bg-slate-900 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5">
+          <i class="fa-solid fa-grip"></i> Full Dashboard
+        </button>
+        <button onclick="switchTab('members')" id="tab-members" class="tab-btn bg-white text-slate-700 hover:bg-slate-100 text-xs font-semibold px-3.5 py-2 rounded-lg border border-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-users text-rose-600"></i> Member Cards (4)
+        </button>
+        <button onclick="switchTab('meals')" id="tab-meals" class="tab-btn bg-white text-slate-700 hover:bg-slate-100 text-xs font-semibold px-3.5 py-2 rounded-lg border border-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-calendar-days text-blue-600"></i> Daily Meal Sheet
+        </button>
+        <button onclick="switchTab('expenses')" id="tab-expenses" class="tab-btn bg-white text-slate-700 hover:bg-slate-100 text-xs font-semibold px-3.5 py-2 rounded-lg border border-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-basket-shopping text-amber-600"></i> Bazaar & Deposits
+        </button>
+        <button onclick="switchTab('logs')" id="tab-logs" class="tab-btn bg-white text-slate-700 hover:bg-slate-100 text-xs font-semibold px-3.5 py-2 rounded-lg border border-slate-200 flex items-center gap-1.5">
+          <i class="fa-solid fa-clock-rotate-left text-purple-600"></i> Auto Change Log
+          <span id="logCountBadge" class="bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded-full text-[10px] font-bold">0</span>
+        </button>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <span id="cloudSyncBadge" class="text-xs font-semibold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+          <i class="fa-solid fa-cloud-check text-emerald-600"></i> Saved (Reload Safe)
+        </span>
+        <button onclick="manualSaveSheet()" class="edit-only-control bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition">
+          <i class="fa-solid fa-floppy-disk"></i> Save Now
+        </button>
+        <button onclick="exportFullCSV()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-file-csv"></i> Excel (.CSV)
+        </button>
+      </div>
+    </div>
+
+    <!-- MESS MANAGER STYLE SUMMARY & MANAGER PERSONAL SUMMARY -->
+    <section id="section-top-cards" class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <!-- Left: Hisably Active Month Summary Card (Matches Screenshot 1) -->
+      <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
+          <div>
+            <h2 id="activeMonthCardTitle" class="text-base font-bold">Hisably, October</h2>
+            <p class="text-xs text-slate-400">Current Month's Summary</p>
+          </div>
+          <span class="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span> Running
+          </span>
+        </div>
+        <div class="p-4 divide-y divide-slate-100 text-xs">
+          <div class="py-2.5 flex items-center justify-between">
+            <span class="text-slate-600 flex items-center gap-2.5"><i class="fa-solid fa-scale-unbalanced text-rose-500 w-4"></i> Mess Balance (Cash in Hand)</span>
+            <span id="kpiCashBalance" class="font-bold text-slate-900 mono text-sm">0.00 ৳</span>
+          </div>
+          <div class="py-2.5 flex items-center justify-between">
+            <span class="text-slate-600 flex items-center gap-2.5"><i class="fa-solid fa-wallet text-emerald-600 w-4"></i> Mess Total Deposit</span>
+            <span id="kpiTotalDeposit" class="font-bold text-emerald-700 mono text-sm">8000.00 ৳</span>
+          </div>
+          <div class="py-2.5 flex items-center justify-between">
+            <span class="text-slate-600 flex items-center gap-2.5"><i class="fa-solid fa-bowl-rice text-blue-600 w-4"></i> Total Meal</span>
+            <span id="kpiTotalMeals" class="font-bold text-blue-700 mono text-sm">119.00</span>
+          </div>
+          <div class="py-2.5 flex items-center justify-between">
+            <span class="text-slate-600 flex items-center gap-2.5"><i class="fa-solid fa-cart-shopping text-amber-600 w-4"></i> Total Meal Cost (Bazaar)</span>
+            <span id="kpiBazaarCost" class="font-bold text-slate-900 mono text-sm">7850.00 ৳</span>
+          </div>
+          <div class="py-2.5 flex items-center justify-between bg-blue-50/60 px-2 rounded-lg">
+            <span class="text-blue-900 font-semibold flex items-center gap-2.5"><i class="fa-solid fa-calculator text-blue-600 w-4"></i> Meal Rate (Auto)</span>
+            <span id="kpiMealRate" class="font-bold text-blue-700 mono text-sm">65.97 ৳</span>
+          </div>
+          <div class="py-2.5 flex items-center justify-between">
+            <span class="text-slate-600 flex items-center gap-2.5"><i class="fa-solid fa-user-tag text-purple-500 w-4"></i> Total Individual Other Cost</span>
+            <span id="kpiIndividualCost" class="font-bold text-slate-900 mono text-sm">0.00 ৳</span>
+          </div>
+          <div class="py-2.5 flex items-center justify-between">
+            <span class="text-slate-600 flex items-center gap-2.5"><i class="fa-solid fa-users-gear text-indigo-500 w-4"></i> Total Shared Other Cost</span>
+            <span id="kpiFixedCostSub" class="font-bold text-slate-900 mono text-sm">150.00 ৳</span>
+          </div>
+          <div class="pt-3 flex items-center justify-between">
+            <span class="text-slate-800 font-bold flex items-center gap-2.5"><i class="fa-solid fa-coins text-rose-600 w-4"></i> Mess Total Cost (Meal+Other)</span>
+            <span id="kpiTotalSpent" class="font-bold text-rose-600 mono text-sm">8000.00 ৳</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Selected Member / Manager Personal Summary & Quick Actions -->
+      <div class="lg:col-span-7 flex flex-col justify-between gap-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-rose-600 flex items-center gap-2">
+                <i class="fa-solid fa-user-circle"></i>
+                <span id="mySummaryTitle">My Summary (Pankaj Mahanta)</span>
+              </h3>
+              <p class="text-[11px] text-slate-500">নিচের ড্রপডাউন থেকে যেকোনো মেম্বার সিলেক্ট করে তার ব্যক্তিগত সামারি দেখুন</p>
+            </div>
+            <select id="mySummaryMemberSelect" onchange="renderAll()" class="text-xs border border-slate-300 rounded-lg px-3 py-1.5 font-semibold text-slate-800 bg-slate-50 focus:outline-none">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-sky-50 border border-sky-100 rounded-xl p-3.5">
+              <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center mb-2">
+                <i class="fa-solid fa-bowl-food"></i>
+              </div>
+              <div id="myCardMeals" class="text-xl font-bold text-slate-900 mono">34.00</div>
+              <div class="text-xs text-slate-500 mt-0.5">My Meal</div>
+            </div>
+
+            <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3.5">
+              <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2">
+                <i class="fa-solid fa-dollar-sign"></i>
+              </div>
+              <div id="myCardDeposit" class="text-xl font-bold text-slate-900 mono">1490.00 ৳</div>
+              <div class="text-xs text-slate-500 mt-0.5">My Deposit</div>
+            </div>
+
+            <div class="bg-rose-50 border border-rose-100 rounded-xl p-3.5">
+              <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center mb-2">
+                <i class="fa-solid fa-cart-shopping"></i>
+              </div>
+              <div id="myCardCost" class="text-xl font-bold text-slate-900 mono">2280.36 ৳</div>
+              <div class="text-xs text-slate-500 mt-0.5">My Cost (Meal+Other)</div>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5">
+              <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center mb-2">
+                <i class="fa-solid fa-wallet"></i>
+              </div>
+              <div id="myCardBalance" class="text-xl font-bold text-rose-600 mono">-790.36 ৳</div>
+              <div id="myCardBalanceStatus" class="text-xs font-semibold text-rose-600 mt-0.5">Balance (দিবে)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Action Shortcut Bar & Bazar Date Box -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+              <i class="fa-solid fa-calendar-day"></i>
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-900">Bazar Schedule & Email Notification</div>
+              <div class="text-[11px] text-slate-500">Pankaj Mahanta Bazar Date: <span class="font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">Sat May 02 2026</span></div>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="sendInstantEmailSummary()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-paper-plane"></i> Send Update to Member Emails
+            </button>
+            <button onclick="openPdfReportModal()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-file-pdf"></i> বিস্তারিত হিসাব (PDF)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: ALL MEMBERS CARDS (MESS MANAGER STYLE WITH EMAIL, PERMISSIONS & BALANCE) -->
+    <section id="section-member-cards" class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-id-card-clip text-rose-600"></i>
+            All Members Detailed Cards & Emails
+          </h2>
+          <p class="text-xs text-slate-500">যে মেম্বার ডিপোজিটের চেয়ে বেশি খেয়েছে তার ব্যালেন্স অটোমেটিক নেগেটিভ (<strong class="text-rose-600">- দিবে</strong>) এবং যে কম খেয়েছে তার পজিটিভ (<strong class="text-emerald-600">+ পাবে</strong>)।</p>
+        </div>
+      </div>
+      <div id="memberCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Populated by JS -->
+      </div>
+    </section>
+
+    <!-- SECTION 1: MEMBER-WISE AUTO SUMMARY TABLE & QUICK MEMBER ENTRY -->
+    <section id="section-summary" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="p-4 sm:px-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 bg-slate-50/60">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-emerald-600"></i>
+            Member Summery Info Table (Auto-Calculated)
+          </h2>
+          <p class="text-xs text-slate-500">যেকোনো মেম্বারের নাম, ইমেইল, ডিপোজিট বা পারমিশন এখান থেকে সরাসরি এডিট বা অ্যাড করতে পারবেন।</p>
+        </div>
+
+        <!-- Add Member Inline Form -->
+        <form onsubmit="addMember(event)" class="edit-only-control flex flex-wrap items-center gap-2 no-print">
+          <input
+            type="text"
+            id="newMemberName"
+            placeholder="Member Name..."
+            required
+            class="text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-36"
+          />
+          <input
+            type="email"
+            id="newMemberEmail"
+            placeholder="Email (for notification)..."
+            class="text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-44"
+          />
+          <input
+            type="number"
+            id="newMemberDeposit"
+            placeholder="Initial Deposit (0)"
+            step="any"
+            class="text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 w-32 mono"
+          />
+          <select
+            id="newMemberRole"
+            class="text-xs px-2.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium text-slate-700"
+          >
+            <option value="viewer">👁️ View Only</option>
+            <option value="editor">✍️ Can Edit</option>
+          </select>
+          <button
+            type="submit"
+            class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 shadow-sm transition"
+          >
+            <i class="fa-solid fa-user-plus"></i> + Add Member
+          </button>
+        </form>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-800 text-slate-100 text-[11px] uppercase tracking-wider">
+              <th class="py-3 px-3 font-semibold">#</th>
+              <th class="py-3 px-3 font-semibold">Member Name & Email</th>
+              <th class="py-3 px-3 font-semibold text-center">Total Meal</th>
+              <th class="py-3 px-3 font-semibold text-right">Total Deposit</th>
+              <th class="py-3 px-3 font-semibold text-right">Meal Cost</th>
+              <th class="py-3 px-3 font-semibold text-right">Shared Cost</th>
+              <th class="py-3 px-3 font-semibold text-right">Indiv. Cost</th>
+              <th class="py-3 px-3 font-semibold text-right">Total Cost (Meal+Other)</th>
+              <th class="py-3 px-3 font-semibold text-right">Balance</th>
+              <th class="py-3 px-3 font-semibold text-center">Status</th>
+              <th class="py-3 px-3 font-semibold text-center no-print">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="memberSummaryBody" class="divide-y divide-slate-200 text-xs">
+            <!-- Dynamically Populated -->
+          </tbody>
+          <tfoot id="memberSummaryFoot" class="bg-slate-100 font-bold text-xs border-t-2 border-slate-300">
+            <!-- Dynamically Populated Totals -->
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 2: DAILY MEAL ENTRY SHEET (DAY-WISE AUTO GRID) -->
+    <section id="section-meals" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="p-4 sm:px-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 bg-slate-50/60">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-calendar-check text-blue-600"></i>
+            Day-Wise Automatic Meal Entry Sheet (October 1 – 31)
+          </h2>
+          <p class="text-xs text-slate-500">যেকোনো দিনের মিলের সংখ্যা পরিবর্তন করলে সাথে সাথে মেম্বারের মোট মিল, মিল রেট, খরচ এবং ব্যালেন্স আপডেট হয়ে অটোমেটিক লগে রেকর্ড হবে।</p>
+        </div>
+
+        <!-- Bulk / Quick Fill Controls -->
+        <div class="edit-only-control flex flex-wrap items-center gap-2 no-print">
+          <div class="flex items-center gap-1.5 bg-white border border-slate-300 rounded-lg px-2.5 py-1">
+            <span class="text-xs text-slate-600 font-medium">Quick Fill All Days:</span>
+            <button onclick="bulkFillMeals(2)" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-2 py-1 rounded transition">2 Meals/Day</button>
+            <button onclick="bulkFillMeals(0)" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold px-2 py-1 rounded transition">Clear All (0)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sheet-container">
+        <table class="w-full sheet-table text-xs">
+          <thead id="mealSheetHead"></thead>
+          <tbody id="mealSheetBody"></tbody>
+          <tfoot id="mealSheetFoot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 3: BAZAAR / COST ENTRY & MEMBER DEPOSIT LOG (WITH EDIT & DELETE) -->
+    <section id="section-expenses" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- Left: Auto Cost Entry (Bazaar + Shared + Individual Cost) -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div class="p-4 sm:px-5 border-b border-slate-200 bg-amber-50/50">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-cart-plus text-amber-600"></i>
+            Meal/Bazar Cost, Shared & Individual Cost Table
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">নতুন বাজার বা শেয়ার্ড খরচ যোগ করুন অথবা যেকোনো এন্ট্রির পাশের <i class="fa-solid fa-pen text-blue-600"></i> আইকনে ক্লিক করে এডিট করুন।</p>
+
+          <!-- Add Cost Form -->
+          <form onsubmit="addExpense(event)" class="edit-only-control mt-3 grid grid-cols-2 sm:grid-cols-6 gap-2 no-print">
+            <input type="date" id="costDate" required class="col-span-1 sm:col-span-2 text-xs px-2.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            <select id="costType" class="col-span-1 sm:col-span-2 text-xs px-2.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white">
+              <option value="bazaar">🍲 Meal/Bazar Cost</option>
+              <option value="fixed">🏠 Shared Other Cost (All)</option>
+              <option value="individual">👤 Individual Other Cost</option>
+            </select>
+            <input type="text" id="costShopperCustom" placeholder="Shopper Name(s)..." class="col-span-2 sm:col-span-2 text-xs px-2.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500" list="shopperSuggestions" />
+            <datalist id="shopperSuggestions"></datalist>
+            <input type="text" id="costItems" placeholder="Cost Details (e.g. Peyaj, alu, murgi, tel)..." required class="col-span-2 sm:col-span-3 text-xs px-2.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            <input type="number" id="costAmount" placeholder="Amount (৳)" step="any" required class="col-span-1 sm:col-span-2 text-xs px-2.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 mono" />
+            <button type="submit" class="col-span-1 sm:col-span-1 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold py-2 px-3 rounded-lg shadow-sm transition">
+              + Add
+            </button>
+          </form>
+        </div>
+
+        <div class="overflow-y-auto max-h-[440px] flex-1">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-100 text-slate-600 sticky top-0 border-b border-slate-200 z-10">
+              <tr>
+                <th class="py-2.5 px-3">Date</th>
+                <th class="py-2.5 px-3">Type</th>
+                <th class="py-2.5 px-3">Shopper's Name</th>
+                <th class="py-2.5 px-3">Cost Details</th>
+                <th class="py-2.5 px-3 text-right">Amount</th>
+                <th class="py-2.5 px-3 text-center no-print">Edit/Del</th>
+              </tr>
+            </thead>
+            <tbody id="expenseListBody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+        <div id="expenseFooter" class="p-3 bg-slate-50 border-t border-slate-200 text-xs flex flex-wrap justify-between gap-2 font-bold text-slate-800"></div>
+      </div>
+
+      <!-- Right: Deposit Entry Log -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div class="p-4 sm:px-5 border-b border-slate-200 bg-emerald-50/50">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-hand-holding-dollar text-emerald-600"></i>
+            Member Deposit Table (All Installments)
+          </h3>
+          <p class="text-xs text-slate-500 mt-0.5">মেম্বারদের ডিপোজিট যোগ বা যেকোনো ডিপোজিট এডিট (<i class="fa-solid fa-pen text-blue-600"></i>) করলে সাথে সাথে মেম্বার ব্যালেন্স আপডেট হবে।</p>
+
+          <!-- Add Deposit Form -->
+          <form onsubmit="addDeposit(event)" class="edit-only-control mt-3 grid grid-cols-2 sm:grid-cols-6 gap-2 no-print">
+            <input type="date" id="depDate" required class="col-span-1 sm:col-span-2 text-xs px-2.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            <select id="depMember" required class="col-span-1 sm:col-span-2 text-xs px-2.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"></select>
+            <input type="number" id="depAmount" placeholder="Amount (৳)" step="any" required class="col-span-2 sm:col-span-2 text-xs px-2.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 mono" />
+            <input type="text" id="depNote" placeholder="Note (e.g. Cash / bKash / Bazar Deposit)" class="col-span-2 sm:col-span-5 text-xs px-2.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            <button type="submit" class="col-span-2 sm:col-span-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2 px-3 rounded-lg shadow-sm transition">
+              + Add
+            </button>
+          </form>
+        </div>
+
+        <div class="overflow-y-auto max-h-[440px] flex-1">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-100 text-slate-600 sticky top-0 border-b border-slate-200 z-10">
+              <tr>
+                <th class="py-2.5 px-3">Date</th>
+                <th class="py-2.5 px-3">Member Name</th>
+                <th class="py-2.5 px-3">Note</th>
+                <th class="py-2.5 px-3 text-right">Deposit Amount</th>
+                <th class="py-2.5 px-3 text-center no-print">Edit/Del</th>
+              </tr>
+            </thead>
+            <tbody id="depositListBody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+        <div id="depositFooter" class="p-3 bg-slate-50 border-t border-slate-200 text-xs flex justify-between font-bold text-slate-800"></div>
+      </div>
+
+    </section>
+
+    <!-- SECTION 4: COMPLETE AUTO ACTIVITY & AUDIT LOG -->
+    <section id="section-logs" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="p-4 sm:px-6 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 bg-purple-50/50">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-purple-600"></i>
+            Automatic Activity & Change Log (কখন কোন সময় কোন দিনে কি চেঞ্জ হয়েছে)
+          </h2>
+          <p class="text-xs text-slate-500">এই শিটে যখনই কোনো মিল, ডিপোজিট, বাজার খরচ বা মেম্বার এডিট/অ্যাড/ডিলিট করা হবে, তার সঠিক তারিখ, সময় এবং বিবরণ অটোমেটিক এখানে লগ হয়ে থাকবে।</p>
+        </div>
+        <div class="flex items-center gap-2 no-print">
+          <button onclick="sendInstantEmailSummary()" class="bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm transition">
+            <i class="fa-solid fa-envelope-circle-check"></i> Email Latest Log to Members
+          </button>
+        </div>
+      </div>
+      <div class="overflow-y-auto max-h-96">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="bg-slate-100 text-slate-600 sticky top-0 border-b border-slate-200">
+            <tr>
+              <th class="py-2.5 px-4">Date & Exact Time</th>
+              <th class="py-2.5 px-4">Changed By</th>
+              <th class="py-2.5 px-4">Category</th>
+              <th class="py-2.5 px-4">Action & Exact Change Details</th>
+            </tr>
+          </thead>
+          <tbody id="activityLogBody" class="divide-y divide-slate-200">
+            <!-- Populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: Edit Any Expense / Deposit / Member Details -->
+  <div id="editRecordModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <h3 id="editModalTitle" class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-blue-600"></i>
+          Edit Record
+        </h3>
+        <button onclick="closeEditRecordModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form onsubmit="submitEditRecord(event)" class="space-y-3 text-xs">
+        <input type="hidden" id="editRecordKind" />
+        <input type="hidden" id="editRecordId" />
+
+        <div id="editDateGroup">
+          <label class="font-semibold text-slate-700 block mb-1">Date</label>
+          <input type="date" id="editRecordDate" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <div id="editExpenseTypeGroup" class="hidden">
+          <label class="font-semibold text-slate-700 block mb-1">Cost Type</label>
+          <select id="editRecordCostType" class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white">
+            <option value="bazaar">🍲 Meal/Bazar Cost</option>
+            <option value="fixed">🏠 Shared Other Cost (Divided Equally)</option>
+            <option value="individual">👤 Individual Other Cost</option>
+          </select>
+        </div>
+
+        <div id="editMemberSelectGroup" class="hidden">
+          <label class="font-semibold text-slate-700 block mb-1">Member</label>
+          <select id="editRecordMemberId" class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white"></select>
+        </div>
+
+        <div id="editShopperGroup" class="hidden">
+          <label class="font-semibold text-slate-700 block mb-1">Shopper's Name</label>
+          <input type="text" id="editRecordShopper" class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+        </div>
+
+        <div id="editAmountGroup">
+          <label class="font-semibold text-slate-700 block mb-1">Amount (৳)</label>
+          <input type="number" step="any" id="editRecordAmount" class="w-full px-3 py-2 rounded-lg border border-slate-300 mono text-sm font-bold" />
+        </div>
+
+        <div id="editDetailsGroup">
+          <label id="editDetailsLabel" class="font-semibold text-slate-700 block mb-1">Details / Note</label>
+          <textarea id="editRecordDetails" rows="3" class="w-full px-3 py-2 rounded-lg border border-slate-300"></textarea>
+        </div>
+
+        <div id="editMemberExtraGroup" class="hidden space-y-3">
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Member Name</label>
+            <input type="text" id="editMemberNameField" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-semibold" />
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Email Address (For Notification)</label>
+            <input type="email" id="editMemberEmailField" class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Bazar Date Schedule</label>
+            <input type="text" id="editMemberBazarDateField" placeholder="e.g. Sat May 02 2026 or No Bazar Date Set" class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+          </div>
+          <div>
+            <label class="font-semibold text-slate-700 block mb-1">Special Permission Badge</label>
+            <input type="text" id="editMemberSpecPermField" placeholder="e.g. ম্যানেজার পরিবর্তন / No Permission" class="w-full px-3 py-2 rounded-lg border border-slate-300" />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeEditRecordModal()" class="px-4 py-2 rounded-lg font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow">
+            Save Changes & Log
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Official Mess Manager PDF Report Preview & Download -->
+  <div id="pdfReportModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="p-4 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 class="text-sm font-bold flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf text-rose-400"></i>
+            Official Monthly PDF Report Preview (Mess Manager Format)
+          </h3>
+          <p class="text-[11px] text-slate-400">মাস শেষে বা যেকোনো সময় সম্পূর্ণ হিসাব পিডিএফ (PDF) হিসেবে ডাউনলোড বা প্রিন্ট করুন</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="downloadPdfFile()" id="downloadPdfBtn" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-1.5 shadow transition">
+            <i class="fa-solid fa-download"></i> Download PDF File
+          </button>
+          <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-print"></i> Print PDF
+          </button>
+          <button onclick="closePdfReportModal()" class="text-slate-400 hover:text-white px-2 text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable PDF Container -->
+      <div class="overflow-y-auto p-6 bg-slate-100 flex-1">
+        <div id="pdfPrintableArea" class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 max-w-3xl mx-auto space-y-6 text-slate-900">
+          <!-- Populated dynamically in exact Mess Manager PDF style -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Share with Mess Members & Email Notification Center -->
+  <div id="shareAndEmailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-emerald-600"></i>
+            Google Sites (`sites.google.com`) লাগবে না! বিকল্প লাইভ লিংক ও সমাধান
+          </h3>
+          <p class="text-xs text-slate-500">বাংলাদেশে আপনার ওয়াইফাইতে `sites.google.com` ব্লক করা, তাই নিচের বিকল্প ওয়েবসাইট ব্যবহার করুন</p>
+        </div>
+        <button onclick="closeShareAndEmailModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Important Notice: Stop trying sites.google.com -->
+      <div class="bg-rose-50 border border-rose-200 rounded-xl p-4 space-y-2 text-xs">
+        <div class="font-bold text-rose-900 flex items-center gap-2 text-sm">
+          <i class="fa-solid fa-ban text-rose-600"></i>
+          ভাইয়া, আপনার `sites.google.com`-এ ঢোকার কোনো দরকারই নেই!
+        </div>
+        <p class="text-slate-700 leading-relaxed">
+          আপনি Brave বা Firefox যে ব্রাউজারই ব্যবহার করুন না কেন, আপনার ইন্টারনেট লাইন (ISP) থেকে <strong><code>sites.google.com</code> ব্লক করা</strong>। তাই বারবার <code>Server Not Found</code> বা <code>DNS_PROBE_POSSIBLE</code> আসছে। সবচেয়ে বড় কথা—আপনি কোনোভাবে Google Sites-এ সাইট বানালেও আপনার মেসের মেম্বাররা (Masud, Leon, Aniruddha) তাদের ফোন থেকে ওই লিংকে ঢুকতে পারবে না! <strong>তাই Google Sites বাদ দিয়ে নিচের পদ্ধতিটি ব্যবহার করুন:</strong>
+        </p>
+      </div>
+
+      <!-- BEST SOLUTION: Tiiny.host / Netlify Drop (Works 100% in Bangladesh) -->
+      <div class="bg-emerald-50 border-2 border-emerald-500 rounded-xl p-4 space-y-3 text-xs">
+        <div class="font-bold text-emerald-950 flex items-center gap-2 text-sm">
+          <i class="fa-solid fa-rocket text-emerald-600"></i>
+          সবচেয়ে সহজ উপায়: মাত্র ২ ক্লিকে লাইভ লিংক বানান (`tiiny.host` বাংলাদেশে ১০০% খোলে)
+        </div>
+        <div class="space-y-2 text-slate-800 leading-relaxed">
+          <p class="bg-white p-2.5 rounded-lg border border-emerald-200">
+            <strong>ধাপ ১:</strong> প্রথমে নিচের সবুজ বাটনে (<strong>১. Download index.html</strong>) ক্লিক করুন। আপনার পিসির <code>Downloads</code> ফোল্ডারে <strong><code>index.html</code></strong> নামে ফাইলটি ডাউনলোড হয়ে যাবে।
+          </p>
+          <p class="bg-white p-2.5 rounded-lg border border-emerald-200">
+            <strong>ধাপ ২:</strong> এবার নিচের নীল বাটনে (<strong>২. Open Tiiny.host</strong>) ক্লিক করুন। ওই ওয়েবসাইটটি সাথে সাথে খুলে যাবে (ওটি ব্লক নয়)। সেখানে <strong>Upload file</strong> বাটনে ক্লিক করে আপনার ডাউনলোড করা <code>index.html</code> ফাইলটি সিলেক্ট করে <strong>Publish</strong> চাপুন!
+          </p>
+        </div>
+        <div class="bg-emerald-100/80 p-3 rounded-lg border border-emerald-300 text-[11px] text-emerald-950 font-medium">
+          ✅ <strong>ব্যস!</strong> ৫ সেকেন্ডের মধ্যে ওরা আপনাকে <code>https://black-diamond.tiiny.site</code> এর মতো একটি লিংক দেবে। এই লিংকটি মেম্বারদের দিলে যেকোনো ফোন বা ওয়াইফাই থেকে সরাসরি খুলে যাবে! মেম্বাররা শুধু হিসাব দেখতে পারবে (View-Only), আর আপনি <strong>Unlock with Manager PIN (<span id="sharePinDisplay">1234</span>)</strong> চেপে এডিট করতে পারবেন।
+        </div>
+        <div class="flex flex-wrap gap-2.5 pt-1">
+          <button onclick="downloadStandaloneHtmlFile(true, true)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-md transition">
+            <i class="fa-solid fa-download"></i> ১. Download index.html (সব হিসাবসহ ফাইল)
+          </button>
+          <a href="https://tiiny.host" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2.5 rounded-lg flex items-center gap-2 shadow-md transition">
+            <i class="fa-solid fa-up-right-from-square"></i> ২. Open Tiiny.host (এখানে আপলোড করুন)
+          </a>
+          <a href="https://app.netlify.com/drop" target="_blank" rel="noopener noreferrer" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-3.5 py-2.5 rounded-lg flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-cloud-arrow-up"></i> বিকল্প: Netlify Drop
+          </a>
+        </div>
+      </div>
+
+      <!-- How to open sites.google.com in Firefox if still wanted -->
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2 text-xs">
+        <div class="font-bold text-amber-950 flex items-center gap-2 text-sm">
+          <i class="fa-brands fa-firefox-browser text-amber-600 text-base"></i>
+          তবুও যদি আপনার Firefox ব্রাউজারে `sites.google.com` খুলতে চান (মাত্র ৩ ক্লিকে):
+        </div>
+        <ol class="list-decimal list-inside space-y-1 text-slate-700 leading-relaxed">
+          <li>Firefox ব্রাউজারের ডানপাশে উপরে <strong>৩ দাগ মেনু (`☰`) ➔ Settings</strong>-এ যান।</li>
+          <li>বাম পাশের মেনু থেকে <strong>Privacy & Security</strong>-তে ক্লিক করে একদম নিচে স্ক্রল করুন।</li>
+          <li>সেখানে <strong>DNS over HTTPS</strong> অপশনে গিয়ে <strong>Max Protection</strong> সিলেক্ট করুন এবং প্রোভাইডার হিসেবে <strong>Cloudflare</strong> সিলেক্ট করে দিন। সাথে সাথে আপনার Firefox-এ <code>sites.google.com</code> খুলে যাবে!</li>
+        </ol>
+      </div>
+
+      <!-- Step 3: Member Emails & Notification Dispatch -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 text-xs">
+        <div class="flex items-center justify-between">
+          <div class="font-bold text-slate-900 flex items-center gap-2 text-sm">
+            <i class="fa-solid fa-envelope-open-text text-indigo-600"></i>
+            ৩. মেম্বার ইমেইল লিস্ট ও এডিট নোটিফিকেশন:
+          </div>
+          <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-emerald-700">
+            <input type="checkbox" id="autoEmailPromptToggle" onchange="toggleAutoEmailSetting(this.checked)" class="rounded text-emerald-600" />
+            <span>Prompt Email on Edit</span>
+          </label>
+        </div>
+
+        <div id="memberEmailDirectory" class="divide-y divide-slate-200 bg-white rounded-lg border border-slate-200">
+          <!-- Populated dynamically with the 4 member emails -->
+        </div>
+
+        <div class="pt-2 flex flex-wrap items-center justify-between gap-2">
+          <span class="text-[11px] text-slate-500">যেকোনো এডিট করার পর নিচের বাটনে ক্লিক করলে মেম্বারদের ইমেইলে সম্পূর্ণ আপডেট ও চেঞ্জ লগ চলে যাবে:</span>
+          <button onclick="sendInstantEmailSummary()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-1.5 shadow transition">
+            <i class="fa-solid fa-paper-plane"></i> Send Updated Sheet & Log to All Emails
+          </button>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button onclick="closeShareAndEmailModal()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-white">বুঝেছি (Done)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Carry Forward to Next Month -->
+  <div id="carryForwardModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-calendar-plus text-indigo-600"></i>
+          Start New Month & Carry Forward
+        </h3>
+        <button onclick="closeCarryForwardModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        নতুন মাসের শিট তৈরি করলে বর্তমান মাসের হিসাব সম্পূর্ণ অক্ষত থাকবে (যেকোনো সময় মাস পরিবর্তন করে দেখতে পারবেন) এবং মেম্বারদের ব্যালেন্স (পাবে/দিবে) নতুন মাসে স্থানান্তর করতে পারবেন।
+      </p>
+      <div class="space-y-2 bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs">
+        <label class="flex items-start gap-2.5 cursor-pointer">
+          <input type="checkbox" id="carryBalancesCheckbox" checked class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500" />
+          <span>
+            <strong class="text-slate-800 block">Carry Forward Member Closing Balances (+/-)</strong>
+            <span class="text-slate-500">যে মেম্বার পাবে (+613.05 ৳) বা দিবে (-790.36 ৳) তা নতুন মাসের ওপেনিং ডিপোজিট হিসেবে যুক্ত হবে।</span>
+          </span>
+        </label>
+        <label class="flex items-start gap-2.5 cursor-pointer pt-2 border-t border-slate-200">
+          <input type="checkbox" id="defaultMealsCheckbox" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500" />
+          <span>
+            <strong class="text-slate-800 block">Pre-fill 2 Meals/Day for All Members</strong>
+            <span class="text-slate-500">নতুন মাসে ডিফল্টভাবে ২ মিল বসিয়ে দেবে (পরে যেকোনো সময় এডিট করা যাবে)।</span>
+          </span>
+        </label>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeCarryForwardModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+        <button onclick="confirmCarryForward()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow">
+          Create & Switch to Next Month
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Quick Deposit for a Member -->
+  <div id="quickDepositModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-wallet text-emerald-600"></i>
+          Quick Add Deposit
+        </h3>
+        <button onclick="closeQuickDepositModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form onsubmit="submitQuickDeposit(event)" class="space-y-3">
+        <input type="hidden" id="quickDepMemberId" />
+        <div>
+          <label class="text-xs font-semibold text-slate-600 block mb-1">Member Name</label>
+          <div id="quickDepMemberName" class="text-sm font-bold text-slate-900 bg-slate-100 px-3 py-2 rounded-lg"></div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-600 block mb-1">Deposit Date</label>
+          <input type="date" id="quickDepDate" required class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-600 block mb-1">Deposit Amount (৳)</label>
+          <input
+            type="number"
+            id="quickDepAmount"
+            step="any"
+            required
+            placeholder="e.g. 500"
+            class="w-full text-sm px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 mono"
+          />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-600 block mb-1">Note / Method</label>
+          <input
+            type="text"
+            id="quickDepNote"
+            placeholder="Cash / bKash / Bazar Deposit"
+            value="Cash Deposit"
+            class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeQuickDepositModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow">
+            + Save Deposit
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Custom Action Confirmation -->
+  <div id="customConfirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="confirmModalTitle" class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-circle-question text-rose-600"></i>
+          Confirm Action
+        </h3>
+        <button onclick="closeCustomConfirm()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p id="confirmModalMessage" class="text-xs text-slate-600 leading-relaxed"></p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeCustomConfirm()" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+        <button id="confirmModalBtn" class="px-4 py-2 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Access Control & Member Permissions -->
+  <div id="accessControlModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-user-shield text-indigo-600"></i>
+            Access Control & Member Edit Permissions
+          </h3>
+          <p class="text-xs text-slate-500">যাদেরকে আপনি এডিট পারমিশন দিবেন শুধু তারাই এডিট করতে পারবে, বাকিরা শুধু দেখতে পারবে (View-Only)।</p>
+        </div>
+        <button onclick="closeAccessControlModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Current Mode & PIN Setup -->
+      <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="font-bold text-slate-800 block">Sheet Protection Mode</span>
+            <span id="modalProtectionDesc" class="text-slate-500">Currently unlocked for Manager editing</span>
+          </div>
+          <button onclick="toggleQuickLock()" id="modalLockToggleBtn" class="px-3 py-1.5 rounded-lg font-semibold bg-amber-600 text-white hover:bg-amber-500 transition">
+            Lock Sheet (View-Only)
+          </button>
+        </div>
+
+        <div id="managerPinSettingsBox" class="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="font-bold text-slate-800 block">Manager Security PIN</span>
+            <span class="text-slate-500">View-Only লক থাকা অবস্থায় আনলক করতে এই পিন লাগবে</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <input
+              type="password"
+              id="managerPinInput"
+              maxlength="8"
+              placeholder="PIN (1234)"
+              class="w-28 px-2.5 py-1.5 rounded-lg border border-slate-300 mono text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <button onclick="saveManagerPin()" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg font-semibold transition">
+              Save PIN
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test / Switch Active Viewer Role -->
+      <div class="bg-indigo-50/70 p-3.5 rounded-xl border border-indigo-200 space-y-2 text-xs">
+        <label class="font-bold text-indigo-950 block">
+          <i class="fa-solid fa-users-viewfinder mr-1 text-indigo-600"></i>
+          Active User / Member Mode (কে হিসেবে শিট ব্যবহার করছেন):
+        </label>
+        <select id="activeUserSimulator" onchange="switchSimulatedUser(this.value)" class="w-full px-3 py-2 rounded-lg border border-indigo-300 bg-white font-semibold text-slate-800 focus:outline-none">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+
+      <!-- Member-wise Permission List -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+          <span>Member Access Permissions (কে এডিট করতে পারবে)</span>
+          <span class="text-[11px] font-normal text-slate-500">Click button to toggle Edit/View</span>
+        </div>
+        <div id="memberPermissionsList" class="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto"></div>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button onclick="closeAccessControlModal()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-white">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PIN Unlock Prompt -->
+  <div id="pinUnlockModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xs w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-key text-amber-600"></i>
+          Manager PIN Required
+        </h3>
+        <button onclick="closePinUnlockModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-600">এডিট মোড চালু করতে আপনার ম্যানেজার পিন (PIN) দিন (ডিফল্ট পিন: <code class="bg-slate-100 px-1.5 py-0.5 rounded font-bold">1234</code>):</p>
+      <form onsubmit="submitPinUnlock(event)" class="space-y-3">
+        <input
+          type="password"
+          id="unlockPinField"
+          required
+          placeholder="Enter Manager PIN..."
+          class="w-full px-3 py-2 rounded-lg border border-slate-300 text-center mono text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+        />
+        <p id="pinErrorMsg" class="text-[11px] text-rose-600 font-semibold text-center hidden">ভুল পিন! সঠিক ম্যানেজার পিন দিন।</p>
+        <div class="flex justify-end gap-2 pt-1">
+          <button type="button" onclick="closePinUnlockModal()" class="px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-500 text-white shadow">
+            Unlock Edit Access
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Floating Toast Notification with Undo & Email Trigger Support -->
+  <div id="toastBanner" class="fixed bottom-5 right-5 z-50 hidden items-center gap-3 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 text-xs max-w-md">
+    <i class="fa-solid fa-circle-check text-emerald-400 shrink-0"></i>
+    <span id="toastMessage" class="leading-snug">Action completed</span>
+    <button id="toastEmailBtn" onclick="sendLastActionEmail()" class="hidden bg-indigo-500/30 hover:bg-indigo-500/50 text-indigo-200 border border-indigo-400/40 px-2.5 py-1 rounded-md font-semibold transition shrink-0">
+      <i class="fa-solid fa-envelope mr-1"></i>Notify Mail
+    </button>
+    <button id="toastUndoBtn" onclick="undoLastDelete()" class="hidden bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2.5 py-1 rounded-md font-semibold transition shrink-0">
+      Undo
+    </button>
+  </div>
+
+  <script>
+    const MONTH_NAMES = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const DATA_SCHEMA_VERSION = 'black_diamond_v3';
+
+    let appState = {
+      schemaVersion: DATA_SCHEMA_VERSION,
+      messName: 'Hisably',
+      currentYear: 2026,
+      currentMonth: 9, // October (0-indexed)
+      currency: '৳',
+      isLockedViewOnly: false,
+      managerPin: '1234',
+      activeViewerId: 'admin',
+      autoEmailPrompt: true,
+      monthsData: {}
+    };
+
+    let cloudSaveCallback = null;
+    let hasLoadedFromCloud = false;
+    let hasUnsavedLocalChanges = false;
+    let saveDebounceTimer = null;
+    let lastLoggedEntry = null;
+    const CLIENT_SESSION_ID = 'client_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+
+    function formatNowTimestamp() {
+      const now = new Date();
+      return now.toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+    }
+
+    function getActiveActorName() {
+      const monthObj = getCurrentMonthObj();
+      if (appState.activeViewerId && appState.activeViewerId !== 'admin') {
+        const found = monthObj.members.find(m => m.id === appState.activeViewerId);
+        if (found) return found.name;
+      }
+      return 'Pankaj Mahanta (Manager)';
+    }
+
+    function recordActivityLog(category, details) {
+      const monthObj = getCurrentMonthObj();
+      if (!Array.isArray(monthObj.logs)) monthObj.logs = [];
+      const entry = {
+        id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        timestamp: formatNowTimestamp(),
+        actor: getActiveActorName(),
+        category,
+        details
+      };
+      monthObj.logs.unshift(entry);
+      if (monthObj.logs.length > 250) monthObj.logs.length = 250;
+      lastLoggedEntry = entry;
+    }
+
+    function setSyncStatus(statusType, text) {
+      const badge = document.getElementById('cloudSyncBadge');
+      if (!badge) return;
+      if (statusType === 'saving') {
+        badge.className = 'text-xs font-semibold text-blue-700 bg-blue-100 px-3 py-1.5 rounded-full flex items-center gap-1.5';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span> ${text || 'Saving...'}`;
+      } else if (statusType === 'saved') {
+        badge.className = 'text-xs font-semibold text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-full flex items-center gap-1.5';
+        badge.innerHTML = `<i class="fa-solid fa-cloud-check text-emerald-600"></i> ${text || 'Saved (Reload Safe)'}`;
+      } else if (statusType === 'error') {
+        badge.className = 'text-xs font-semibold text-rose-700 bg-rose-100 px-3 py-1.5 rounded-full flex items-center gap-1.5';
+        badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-600"></i> ${text || 'Sync Retry...'}`;
+      }
+    }
+
+    function canCurrentUserEdit() {
+      if (appState.isLockedViewOnly) return false;
+      if (!appState.activeViewerId || appState.activeViewerId === 'admin') return true;
+      const monthObj = getCurrentMonthObj();
+      const mem = monthObj.members.find(m => m.id === appState.activeViewerId);
+      if (!mem) return false;
+      return mem.role === 'editor' || mem.role === 'manager';
+    }
+
+    function getMonthKey(year = appState.currentYear, month = appState.currentMonth) {
+      return `${year}-${String(month + 1).padStart(2, '0')}`;
+    }
+
+    function getDaysInMonth(year, month) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+
+    // Exact Hisably October Data from User's PDF & Screenshots
+    function createBlackDiamondOctoberData(year = 2026, month = 9) {
+      const days = getDaysInMonth(year, month);
+      const members = [
+        {
+          id: 'm1',
+          name: 'Pankaj Mahanta',
+          role: 'manager',
+          email: 'aryanpankaj78@gmail.com',
+          phone: 'N/A',
+          specialPermission: 'Manager (Full Control)',
+          bazarDates: 'Sat May 02 2026'
+        },
+        {
+          id: 'm2',
+          name: 'Masud Rana',
+          role: 'viewer',
+          email: 'mkmasudrana806@gmail.com',
+          phone: 'N/A',
+          specialPermission: 'No Permission',
+          bazarDates: 'No Bazar Date Set'
+        },
+        {
+          id: 'm3',
+          name: 'Md Leon Ahamed',
+          role: 'viewer',
+          email: 'leonahmead89@gmail.com',
+          phone: 'N/A',
+          specialPermission: 'No Permission',
+          bazarDates: 'No Bazar Date Set'
+        },
+        {
+          id: 'm4',
+          name: 'Aniruddha Kushol Kar',
+          role: 'editor',
+          email: 'aniruddhakushol12@gmail.com',
+          phone: 'N/A',
+          specialPermission: 'ম্যানেজার পরিবর্তন',
+          bazarDates: 'No Bazar Date Set'
+        }
+      ];
+
+      // Initialize all days to 0
+      const meals = {};
+      for (let d = 1; d <= days; d++) {
+        meals[d] = { m1: 0, m2: 0, m3: 0, m4: 0 };
+      }
+
+      // Exact daily meals from PDF (Pages 1-4) summing to:
+      // Pankaj (m1)=34, Masud (m2)=46, Leon (m3)=30, Aniruddha (m4)=9 => Total = 119.00
+      const pdfDailyMeals = {
+        1:  { m1: 3, m2: 3, m3: 6, m4: 0 },
+        2:  { m1: 2, m2: 3, m3: 1, m4: 0 },
+        3:  { m1: 3, m2: 3, m3: 2, m4: 0 },
+        4:  { m1: 3, m2: 3, m3: 2, m4: 1 },
+        5:  { m1: 3, m2: 3, m3: 4, m4: 2 },
+        6:  { m1: 2, m2: 3, m3: 0, m4: 0 },
+        7:  { m1: 0, m2: 3, m3: 0, m4: 0 },
+        8:  { m1: 3, m2: 3, m3: 2, m4: 1 },
+        9:  { m1: 0, m2: 2, m3: 0, m4: 0 },
+        10: { m1: 0, m2: 2, m3: 0, m4: 0 },
+        11: { m1: 2, m2: 2, m3: 3, m4: 0 },
+        12: { m1: 2, m2: 2, m3: 2, m4: 1 },
+        13: { m1: 2, m2: 2, m3: 1, m4: 1 },
+        14: { m1: 2, m2: 2, m3: 0, m4: 2 },
+        15: { m1: 2, m2: 2, m3: 0, m4: 1 },
+        16: { m1: 2, m2: 3, m3: 4, m4: 0 },
+        17: { m1: 2, m2: 1, m3: 3, m4: 0 },
+        18: { m1: 1, m2: 2, m3: 0, m4: 0 },
+        21: { m1: 0, m2: 2, m3: 0, m4: 0 }
+      };
+
+      Object.keys(pdfDailyMeals).forEach(dayKey => {
+        const d = parseInt(dayKey, 10);
+        if (meals[d]) {
+          meals[d] = { ...pdfDailyMeals[d] };
+        }
+      });
+
+      const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+      // Exact Bazaar Costs (7,850 ৳) + Shared Other Cost (150 ৳) = 8,000 ৳ from PDF Pages 5-6
+      const expenses = [
+        { id: 'e1',  date: `${monthPrefix}-01`, type: 'bazaar', memberId: 'm1', shopper: 'Pankaj Mahanta, Md Leon Ahamed', items: 'Murgi, tel', amount: 460 },
+        { id: 'e2',  date: `${monthPrefix}-01`, type: 'bazaar', memberId: 'm2', shopper: 'Masud Rana, Pankaj Mahanta', items: 'Bazar chaal, alu, dhal', amount: 800 },
+        { id: 'e3',  date: `${monthPrefix}-02`, type: 'bazaar', memberId: 'm2', shopper: 'Masud Rana', items: '2 haali dim, .5 kg vendi', amount: 150 },
+        { id: 'e4',  date: `${monthPrefix}-03`, type: 'bazaar', memberId: 'm2', shopper: 'Masud Rana, Pankaj Mahanta', items: '5kg alu, mach, polithin, piyas, morich, potol', amount: 740 },
+        { id: 'e5',  date: `${monthPrefix}-03`, type: 'bazaar', memberId: 'm2', shopper: 'Masud Rana, Pankaj Mahanta', items: 'Light, majoni', amount: 120 },
+        { id: 'e6',  date: `${monthPrefix}-03`, type: 'bazaar', memberId: 'm3', shopper: 'Md Leon Ahamed, Aniruddha Kushol Kar', items: 'Murgi, vimbar, dim', amount: 940 },
+        { id: 'e7',  date: `${monthPrefix}-03`, type: 'fixed',  memberId: 'm1', shopper: 'Divided into 4 members (37.5 ৳ each)', items: 'Polithin (Shared Other Cost)', amount: 150 },
+        { id: 'e8',  date: `${monthPrefix}-07`, type: 'bazaar', memberId: 'm2', shopper: 'Masud Rana, Pankaj Mahanta', items: 'Chal 25kg, murgi, mach, mosalla, potol, mula, vendi', amount: 2330 },
+        { id: 'e9',  date: `${monthPrefix}-11`, type: 'bazaar', memberId: 'm2', shopper: 'Masud Rana', items: 'Piyas, rosun, ada', amount: 220 },
+        { id: 'e10', date: `${monthPrefix}-11`, type: 'bazaar', memberId: 'm3', shopper: 'Md Leon Ahamed', items: 'Morich & holud gura', amount: 200 },
+        { id: 'e11', date: `${monthPrefix}-13`, type: 'bazaar', memberId: 'm3', shopper: 'Md Leon Ahamed', items: 'Murgi, tel, alu, dal, khachuri dhunia, lal shak, vara', amount: 745 },
+        { id: 'e12', date: `${monthPrefix}-17`, type: 'bazaar', memberId: 'm2', shopper: 'Masud Rana', items: 'Piyas .5 kg', amount: 30 },
+        { id: 'e13', date: `${monthPrefix}-17`, type: 'bazaar', memberId: 'm2', shopper: 'Masud Rana', items: '4 ta dim', amount: 50 },
+        { id: 'e14', date: `${monthPrefix}-17`, type: 'bazaar', memberId: 'm4', shopper: 'Aniruddha Kushol Kar', items: 'Shak', amount: 30 },
+        { id: 'e15', date: `${monthPrefix}-18`, type: 'bazaar', memberId: 'm2', shopper: 'Masud Rana', items: 'Peyaj 2kg+alu 2kg=150, murgi 1.8kg=320, lobon 1kg=40, dal 1kg+4ta dim+tel 1kg=485, Sobji=70, Vara=20', amount: 1035 }
+      ];
+
+      // Exact Deposits from PDF Page 4 totaling:
+      // Pankaj=1490, Masud=3685, Leon=1885, Aniruddha=940 => Total = 8,000 ৳
+      const deposits = [
+        { id: 'd1',  date: `${monthPrefix}-01`, memberId: 'm3', amount: 460,  note: '1st Oct Deposit' },
+        { id: 'd2',  date: `${monthPrefix}-03`, memberId: 'm2', amount: 150,  note: '3rd Oct Deposit' },
+        { id: 'd3',  date: `${monthPrefix}-03`, memberId: 'm1', amount: 740,  note: '3rd Oct Deposit' },
+        { id: 'd4',  date: `${monthPrefix}-03`, memberId: 'm3', amount: 150,  note: '3rd Oct Deposit' },
+        { id: 'd5',  date: `${monthPrefix}-03`, memberId: 'm4', amount: 940,  note: '3rd Oct Deposit' },
+        { id: 'd6',  date: `${monthPrefix}-03`, memberId: 'm2', amount: 500,  note: '3rd Oct Deposit' },
+        { id: 'd7',  date: `${monthPrefix}-03`, memberId: 'm1', amount: 400,  note: '3rd Oct Deposit' },
+        { id: 'd8',  date: `${monthPrefix}-03`, memberId: 'm1', amount: 20,   note: '3rd Oct Deposit' },
+        { id: 'd9',  date: `${monthPrefix}-07`, memberId: 'm2', amount: 2000, note: '7th Oct Deposit' },
+        { id: 'd10', date: `${monthPrefix}-11`, memberId: 'm3', amount: 200,  note: '11th Oct Deposit' },
+        { id: 'd11', date: `${monthPrefix}-11`, memberId: 'm2', amount: 220,  note: '11th Oct Deposit' },
+        { id: 'd12', date: `${monthPrefix}-11`, memberId: 'm1', amount: 330,  note: '11th Oct Deposit' },
+        { id: 'd13', date: `${monthPrefix}-13`, memberId: 'm3', amount: 745,  note: '13th Oct Deposit' },
+        { id: 'd14', date: `${monthPrefix}-17`, memberId: 'm2', amount: 30,   note: '17th Oct Deposit' },
+        { id: 'd15', date: `${monthPrefix}-17`, memberId: 'm2', amount: 50,   note: '17th Oct Deposit' },
+        { id: 'd16', date: `${monthPrefix}-17`, memberId: 'm3', amount: 330,  note: '17th Oct Deposit' },
+        { id: 'd17', date: `${monthPrefix}-18`, memberId: 'm2', amount: 735,  note: '18th Oct Deposit' }
+      ];
+
+      const logs = [
+        {
+          id: 'log_init_1',
+          timestamp: '24 Oct 2026, 07:55:00 PM',
+          actor: 'Pankaj Mahanta (Manager)',
+          category: 'System Sync',
+          details: 'Imported Hisably (October) official PDF records: 4 Members, 119.00 Total Meals, 8000.00 ৳ Total Deposit, 7850.00 ৳ Meal Cost, 150.00 ৳ Shared Cost.'
+        },
+        {
+          id: 'log_init_2',
+          timestamp: '21 Oct 2026, 09:30:00 PM',
+          actor: 'Pankaj Mahanta (Manager)',
+          category: 'Meal Entry',
+          details: 'Recorded 21st Oct Meals: Masud Rana = 2, Pankaj Mahanta = 0, Md Leon Ahamed = 0, Aniruddha Kushol Kar = 0.'
+        },
+        {
+          id: 'log_init_3',
+          timestamp: '18 Oct 2026, 08:15:00 PM',
+          actor: 'Pankaj Mahanta (Manager)',
+          category: 'Bazaar Cost',
+          details: 'Added Bazaar Cost 1035.00 ৳ by Masud Rana (Peyaj, alu, murgi, lobon, dal, dim, tel, sobji, vara) & Deposit 735.00 ৳.'
+        }
+      ];
+
+      return { members, meals, expenses, deposits, logs };
+    }
+
+    function createBlankMonthData(year, month, membersList = [], defaultMealVal = 0, openingDeposits = []) {
+      const days = getDaysInMonth(year, month);
+      const members = Array.isArray(membersList)
+        ? JSON.parse(JSON.stringify(membersList))
+        : [];
+
+      const meals = {};
+      for (let d = 1; d <= days; d++) {
+        meals[d] = {};
+        members.forEach(m => {
+          meals[d][m.id] = defaultMealVal;
+        });
+      }
+
+      return {
+        members,
+        meals,
+        expenses: [],
+        deposits: openingDeposits,
+        logs: [
+          {
+            id: 'log_new_' + Date.now(),
+            timestamp: formatNowTimestamp(),
+            actor: 'Pankaj Mahanta (Manager)',
+            category: 'New Month',
+            details: `Created new month sheet for ${MONTH_NAMES[month]} ${year}.`
+          }
+        ]
+      };
+    }
+
+    function initDefaultState() {
+      if (window.__SAVED_MESS_STATE__ && window.__SAVED_MESS_STATE__.monthsData) {
+        appState = JSON.parse(JSON.stringify(window.__SAVED_MESS_STATE__));
+        return;
+      }
+      const key = getMonthKey(2026, 9);
+      if (!appState.monthsData[key]) {
+        appState.monthsData[key] = createBlackDiamondOctoberData(2026, 9);
+      }
+    }
+
+    function saveState(immediate = true) {
+      hasUnsavedLocalChanges = true;
+      setSyncStatus('saving', 'Saving...');
+
+      if (saveDebounceTimer) {
+        clearTimeout(saveDebounceTimer);
+        saveDebounceTimer = null;
+      }
+
+      const executeSave = () => {
+        if (typeof cloudSaveCallback === 'function') {
+          cloudSaveCallback(appState);
+        } else {
+          setSyncStatus('saved', 'Saved (Reload Safe)');
+        }
+      };
+
+      if (immediate) {
+        executeSave();
+      } else {
+        saveDebounceTimer = setTimeout(executeSave, 200);
+      }
+    }
+
+    function manualSaveSheet() {
+      saveState(true);
+      showToast('সব তথ্য ক্লাউডে সেভ হয়েছে! রিলোড দিলেও ডেটা হারানোর কোনো ভয় নেই।', false, false);
+    }
+
+    function getCurrentMonthObj() {
+      const key = getMonthKey();
+      if (!appState.monthsData[key]) {
+        const keys = Object.keys(appState.monthsData).sort();
+        const lastMembers = keys.length > 0 ? appState.monthsData[keys[keys.length - 1]].members : [];
+        appState.monthsData[key] = createBlankMonthData(appState.currentYear, appState.currentMonth, lastMembers, 0);
+      }
+      const days = getDaysInMonth(appState.currentYear, appState.currentMonth);
+      const monthObj = appState.monthsData[key];
+      if (!Array.isArray(monthObj.members)) monthObj.members = [];
+      if (!monthObj.meals) monthObj.meals = {};
+      if (!Array.isArray(monthObj.expenses)) monthObj.expenses = [];
+      if (!Array.isArray(monthObj.deposits)) monthObj.deposits = [];
+      if (!Array.isArray(monthObj.logs)) monthObj.logs = [];
+
+      monthObj.members.forEach((m, idx) => {
+        if (!m.role) m.role = idx === 0 ? 'manager' : 'viewer';
+        if (!m.email) m.email = '';
+        if (!m.specialPermission) m.specialPermission = m.role === 'manager' ? 'Manager' : 'No Permission';
+        if (!m.bazarDates) m.bazarDates = 'No Bazar Date Set';
+      });
+      for (let d = 1; d <= days; d++) {
+        if (!monthObj.meals[d]) monthObj.meals[d] = {};
+        monthObj.members.forEach(m => {
+          if (typeof monthObj.meals[d][m.id] === 'undefined') {
+            monthObj.meals[d][m.id] = 0;
+          }
+        });
+      }
+      return monthObj;
+    }
+
+    function calculateMonthMetrics(monthObj, year = appState.currentYear, month = appState.currentMonth) {
+      const days = getDaysInMonth(year, month);
+      const memberMeals = {};
+      const dayTotals = {};
+      let totalWholeMeals = 0;
+
+      monthObj.members.forEach(m => { memberMeals[m.id] = 0; });
+
+      for (let d = 1; d <= days; d++) {
+        dayTotals[d] = 0;
+        monthObj.members.forEach(m => {
+          const val = parseFloat(monthObj.meals[d]?.[m.id]) || 0;
+          memberMeals[m.id] += val;
+          dayTotals[d] += val;
+          totalWholeMeals += val;
+        });
+      }
+
+      let totalBazaarCost = 0;
+      let totalFixedCost = 0;
+      let totalIndividualCost = 0;
+      const memberIndividualCosts = {};
+      monthObj.members.forEach(m => { memberIndividualCosts[m.id] = 0; });
+
+      monthObj.expenses.forEach(e => {
+        const amt = parseFloat(e.amount) || 0;
+        if (e.type === 'fixed') {
+          totalFixedCost += amt;
+        } else if (e.type === 'individual') {
+          totalIndividualCost += amt;
+          if (e.memberId && typeof memberIndividualCosts[e.memberId] !== 'undefined') {
+            memberIndividualCosts[e.memberId] += amt;
+          }
+        } else {
+          totalBazaarCost += amt;
+        }
+      });
+
+      const mealRate = totalWholeMeals > 0 ? (totalBazaarCost / totalWholeMeals) : 0;
+      const memberCount = monthObj.members.length;
+      const fixedPerMember = memberCount > 0 ? (totalFixedCost / memberCount) : 0;
+
+      const memberDeposits = {};
+      monthObj.members.forEach(m => { memberDeposits[m.id] = 0; });
+      let totalDeposits = 0;
+
+      monthObj.deposits.forEach(dep => {
+        const amt = parseFloat(dep.amount) || 0;
+        if (typeof memberDeposits[dep.memberId] !== 'undefined') {
+          memberDeposits[dep.memberId] += amt;
+        }
+        totalDeposits += amt;
+      });
+
+      const totalSpent = totalBazaarCost + totalFixedCost + totalIndividualCost;
+      const cashBalance = totalDeposits - totalSpent;
+
+      const memberSummaries = monthObj.members.map(m => {
+        const meals = memberMeals[m.id] || 0;
+        const mealCost = meals * mealRate;
+        const fixedCost = fixedPerMember;
+        const individualCost = memberIndividualCosts[m.id] || 0;
+        const totalCost = mealCost + fixedCost + individualCost;
+        const deposit = memberDeposits[m.id] || 0;
+        const balance = deposit - totalCost;
+        return {
+          id: m.id,
+          name: m.name,
+          email: m.email || '',
+          role: m.role || 'viewer',
+          specialPermission: m.specialPermission || 'No Permission',
+          bazarDates: m.bazarDates || 'No Bazar Date Set',
+          meals,
+          mealCost,
+          fixedCost,
+          individualCost,
+          totalCost,
+          deposit,
+          balance
+        };
+      });
+
+      return {
+        days,
+        totalWholeMeals,
+        totalBazaarCost,
+        totalFixedCost,
+        totalIndividualCost,
+        totalSpent,
+        mealRate,
+        fixedPerMember,
+        totalDeposits,
+        cashBalance,
+        memberMeals,
+        dayTotals,
+        memberSummaries
+      };
+    }
+
+    function fmtNum(num) {
+      const val = Number(num) || 0;
+      return val.toFixed(2);
+    }
+
+    function fmtMoney(num) {
+      const c = appState.currency || '৳';
+      const val = Number(num) || 0;
+      return `${val.toFixed(2)} ${c}`;
+    }
+
+    function renderAll() {
+      document.getElementById('monthSelect').value = appState.currentMonth;
+      document.getElementById('yearSelect').value = appState.currentYear;
+
+      const periodName = `${MONTH_NAMES[appState.currentMonth]}`;
+      document.getElementById('activeMonthCardTitle').textContent = `${appState.messName || 'Hisably'}, ${periodName}`;
+
+      const defaultDate = `${appState.currentYear}-${String(appState.currentMonth + 1).padStart(2, '0')}-24`;
+      if (!document.getElementById('costDate').value) document.getElementById('costDate').value = defaultDate;
+      if (!document.getElementById('depDate').value) document.getElementById('depDate').value = defaultDate;
+
+      const monthObj = getCurrentMonthObj();
+      const metrics = calculateMonthMetrics(monthObj);
+
+      // Update Top Mess Summary Card
+      document.getElementById('kpiTotalMeals').textContent = metrics.totalWholeMeals.toFixed(2);
+      document.getElementById('kpiMealRate').textContent = fmtMoney(metrics.mealRate);
+      document.getElementById('kpiBazaarCost').textContent = fmtMoney(metrics.totalBazaarCost);
+      document.getElementById('kpiFixedCostSub').textContent = fmtMoney(metrics.totalFixedCost);
+      document.getElementById('kpiIndividualCost').textContent = fmtMoney(metrics.totalIndividualCost);
+      document.getElementById('kpiTotalDeposit').textContent = fmtMoney(metrics.totalDeposits);
+      document.getElementById('kpiTotalSpent').textContent = fmtMoney(metrics.totalSpent);
+
+      const cashEl = document.getElementById('kpiCashBalance');
+      cashEl.textContent = fmtMoney(metrics.cashBalance);
+      cashEl.className = `font-bold mono text-sm ${metrics.cashBalance >= -0.005 ? 'text-slate-900' : 'text-rose-600'}`;
+
+      // Populate My Summary Member Switcher
+      const mySelect = document.getElementById('mySummaryMemberSelect');
+      const currentSelectedMemberId = mySelect.value || (monthObj.members[0]?.id || '');
+      mySelect.innerHTML = monthObj.members.map(m =>
+        `<option value="${m.id}" ${m.id === currentSelectedMemberId ? 'selected' : ''}>${m.name}</option>`
+      ).join('');
+
+      const activeMySummary = metrics.memberSummaries.find(m => m.id === (mySelect.value || monthObj.members[0]?.id)) || metrics.memberSummaries[0];
+      if (activeMySummary) {
+        document.getElementById('mySummaryTitle').textContent = `My Summary (${activeMySummary.name})`;
+        document.getElementById('myCardMeals').textContent = activeMySummary.meals.toFixed(2);
+        document.getElementById('myCardDeposit').textContent = fmtMoney(activeMySummary.deposit);
+        document.getElementById('myCardCost').textContent = fmtMoney(activeMySummary.totalCost);
+        const balEl = document.getElementById('myCardBalance');
+        const balStatusEl = document.getElementById('myCardBalanceStatus');
+        const isPos = activeMySummary.balance >= -0.005;
+        balEl.textContent = `${isPos ? '' : '-'}${fmtMoney(Math.abs(activeMySummary.balance))}`;
+        balEl.className = `text-xl font-bold mono ${isPos ? 'text-emerald-600' : 'text-rose-600'}`;
+        balStatusEl.textContent = isPos ? 'Balance (পাবে / Gets)' : 'Balance (দিবে / Payable)';
+        balStatusEl.className = `text-xs font-semibold mt-0.5 ${isPos ? 'text-emerald-600' : 'text-rose-600'}`;
+      }
+
+      renderMemberCards(monthObj, metrics);
+      renderMemberSummary(monthObj, metrics);
+      renderMealSheet(monthObj, metrics);
+      renderMemberSelectOptions(monthObj);
+      renderExpenseLog(monthObj, metrics);
+      renderDepositLog(monthObj, metrics);
+      renderActivityLogs(monthObj);
+      applyAccessControlUI(monthObj);
+    }
+
+    function renderMemberCards(monthObj, metrics) {
+      const grid = document.getElementById('memberCardsGrid');
+      const editable = canCurrentUserEdit();
+      if (!grid) return;
+
+      grid.innerHTML = metrics.memberSummaries.map(m => {
+        const isPositive = m.balance >= -0.005;
+        const statusWord = isPositive ? 'পাবে' : 'দিবে';
+        const statusColor = isPositive ? 'text-emerald-600' : 'text-rose-600';
+        const roleLabel = m.role === 'manager' ? 'Manager' : (m.role === 'editor' ? 'Editor' : 'Member');
+        const roleBadgeClass = m.role === 'manager'
+          ? 'border-rose-500 text-rose-600 bg-rose-50'
+          : (m.role === 'editor' ? 'border-indigo-500 text-indigo-600 bg-indigo-50' : 'border-slate-300 text-slate-600 bg-slate-50');
+
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between space-y-3 hover:shadow-md transition">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-rose-500 to-amber-500 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+                    ${m.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-bold text-rose-600 leading-tight">${m.name}</h4>
+                    <span class="inline-block text-[10px] font-semibold border px-2 py-0.5 rounded-full mt-0.5 ${roleBadgeClass}">${roleLabel}</span>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] text-slate-400 block">Balance</span>
+                  <span class="text-base font-bold mono ${statusColor}">${isPositive ? '' : '-'}${fmtMoney(Math.abs(m.balance))}</span>
+                  <span class="block text-[10px] font-bold ${statusColor}">● ${statusWord}</span>
+                </div>
+              </div>
+
+              <!-- Email & Permission Info -->
+              <div class="mt-3 pt-2.5 border-t border-slate-100 space-y-1 text-[11px] text-slate-600">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="truncate" title="${m.email || 'No email set'}"><i class="fa-regular fa-envelope text-slate-400 mr-1"></i>${m.email || 'N/A'}</span>
+                  ${m.email ? `<button onclick="copyText('${m.email}')" class="text-rose-500 hover:text-rose-700" title="Copy Email"><i class="fa-regular fa-copy"></i></button>` : ''}
+                </div>
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-400">Permission:</span>
+                  <span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">${m.specialPermission}</span>
+                </div>
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-400">Bazar Date:</span>
+                  <span class="font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">${m.bazarDates}</span>
+                </div>
+              </div>
+
+              <!-- Detailed Breakdown Matching Screenshot 1 -->
+              <div class="mt-3 pt-2.5 border-t border-slate-100 space-y-1.5 text-[11px]">
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Total Meal: <strong class="text-slate-800 mono">${m.meals.toFixed(2)}</strong></span>
+                  <span class="text-slate-500">Deposit: <strong class="text-slate-800 mono">${fmtMoney(m.deposit)}</strong></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Meal Cost</span>
+                  <span class="font-semibold text-slate-800 mono">${fmtMoney(m.mealCost)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Individual Other Cost</span>
+                  <span class="font-semibold text-slate-800 mono">${fmtMoney(m.individualCost)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Shared Other Cost</span>
+                  <span class="font-semibold text-slate-800 mono">${fmtMoney(m.fixedCost)}</span>
+                </div>
+                <div class="flex justify-between pt-1.5 border-t border-slate-100 font-bold text-xs">
+                  <span class="text-slate-700">Total Cost (Meal+Other)</span>
+                  <span class="text-rose-600 mono">${fmtMoney(m.totalCost)}</span>
+                </div>
+              </div>
+            </div>
+
+            ${editable ? `
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-1.5 no-print">
+              <button onclick="openEditMemberModal('${m.id}')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold py-1.5 rounded-lg transition">
+                <i class="fa-solid fa-pen mr-1"></i>Edit Info
+              </button>
+              <button onclick="quickDepositPrompt('${m.id}')" class="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-semibold py-1.5 rounded-lg transition">
+                + Deposit
+              </button>
+            </div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function applyAccessControlUI(monthObj) {
+      const editable = canCurrentUserEdit();
+      const banner = document.getElementById('viewOnlyBanner');
+      const statusBtn = document.getElementById('accessStatusBtn');
+      const statusText = document.getElementById('accessStatusText');
+      const quickLockBtn = document.getElementById('quickLockBtn');
+      const quickLockBtnText = document.getElementById('quickLockBtnText');
+      const viewerLabel = document.getElementById('activeViewerLabel');
+
+      let viewerName = 'Pankaj Mahanta (Manager)';
+      if (appState.activeViewerId && appState.activeViewerId !== 'admin') {
+        const found = monthObj.members.find(m => m.id === appState.activeViewerId);
+        if (found) viewerName = `${found.name} (${found.role === 'viewer' ? 'View-Only' : 'Editor'})`;
+      } else if (appState.isLockedViewOnly) {
+        viewerName = 'Locked for Members (View-Only)';
+      }
+
+      if (!editable) {
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+        viewerLabel.textContent = viewerName;
+
+        statusBtn.className = 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition';
+        statusText.innerHTML = `<i class="fa-solid fa-eye mr-1"></i> View-Only`;
+
+        quickLockBtn.className = 'bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow transition';
+        quickLockBtnText.textContent = 'Unlock Edit';
+      } else {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+
+        statusBtn.className = 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition';
+        statusText.innerHTML = `Editable (${viewerName.split(' ')[0]})`;
+
+        quickLockBtn.className = 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition';
+        quickLockBtnText.textContent = 'Lock (View-Only)';
+      }
+
+      document.querySelectorAll('.edit-only-control').forEach(el => {
+        if (editable) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+    }
+
+    function renderMemberSummary(monthObj, metrics) {
+      const tbody = document.getElementById('memberSummaryBody');
+      const tfoot = document.getElementById('memberSummaryFoot');
+      const editable = canCurrentUserEdit();
+
+      if (metrics.memberSummaries.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="11" class="py-8 text-center text-slate-400 text-xs">
+              No members in this month's sheet. Use <strong>+ Add Member</strong> above to add your mess members.
+            </td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = metrics.memberSummaries.map((m, idx) => {
+          const isPositive = m.balance >= -0.005;
+          const badgeHtml = isPositive
+            ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                 পাবে (+${fmtMoney(Math.abs(m.balance))})
+               </span>`
+            : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
+                 দিবে (-${fmtMoney(Math.abs(m.balance))})
+               </span>`;
+
+          const canEditRole = m.role === 'manager' || m.role === 'editor';
+          const roleBadge = canEditRole
+            ? `<button type="button" onclick="toggleMemberRole('${m.id}')" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-semibold hover:bg-indigo-200 transition" title="Click to toggle edit permission">
+                 <i class="fa-solid fa-pen-to-square"></i> Can Edit
+               </button>`
+            : `<button type="button" onclick="toggleMemberRole('${m.id}')" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold hover:bg-slate-200 transition" title="Click to toggle edit permission">
+                 <i class="fa-solid fa-eye"></i> View Only
+               </button>`;
+
+          return `
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-3 font-semibold text-slate-400 mono">${idx + 1}</td>
+              <td class="py-3 px-3">
+                <div class="flex flex-wrap items-center gap-2">
+                  <div>
+                    <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                      <span>${m.name}</span>
+                      ${roleBadge}
+                    </div>
+                    <div class="text-[11px] text-slate-400">${m.email || 'No email'}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="py-3 px-3 text-center font-bold text-blue-700 mono bg-blue-50/40">${m.meals.toFixed(2)}</td>
+              <td class="py-3 px-3 text-right font-bold text-emerald-700 mono bg-emerald-50/40">${fmtMoney(m.deposit)}</td>
+              <td class="py-3 px-3 text-right font-medium text-slate-800 mono">${fmtMoney(m.mealCost)}</td>
+              <td class="py-3 px-3 text-right text-slate-600 mono">${fmtMoney(m.fixedCost)}</td>
+              <td class="py-3 px-3 text-right text-slate-600 mono">${fmtMoney(m.individualCost)}</td>
+              <td class="py-3 px-3 text-right font-bold text-rose-600 mono">${fmtMoney(m.totalCost)}</td>
+              <td class="py-3 px-3 text-right font-bold mono ${isPositive ? 'text-emerald-600' : 'text-rose-600'}">
+                ${isPositive ? '' : '-'}${fmtMoney(Math.abs(m.balance))}
+              </td>
+              <td class="py-3 px-3 text-center">${badgeHtml}</td>
+              <td class="py-3 px-3 text-center no-print">
+                ${editable ? `
+                <div class="flex items-center justify-center gap-1">
+                  <button type="button" onclick="openEditMemberModal('${m.id}')" title="Edit Member Info & Email" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-2 py-1 rounded font-semibold transition">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button type="button" onclick="quickDepositPrompt('${m.id}')" title="Quick Add Deposit" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-semibold transition">
+                    +৳
+                  </button>
+                  <button type="button" onclick="removeMember('${m.id}')" title="Delete Member" class="text-xs bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white px-2 py-1 rounded font-semibold transition">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>` : `<span class="text-[11px] text-slate-400 italic"><i class="fa-solid fa-lock mr-1"></i>Locked</span>`}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      tfoot.innerHTML = `
+        <tr>
+          <td colspan="2" class="py-3 px-3 text-slate-800">TOTAL (${monthObj.members.length} Members)</td>
+          <td class="py-3 px-3 text-center text-blue-700 mono">${metrics.totalWholeMeals.toFixed(2)}</td>
+          <td class="py-3 px-3 text-right text-emerald-700 mono">${fmtMoney(metrics.totalDeposits)}</td>
+          <td class="py-3 px-3 text-right text-slate-900 mono">${fmtMoney(metrics.totalBazaarCost)}</td>
+          <td class="py-3 px-3 text-right text-slate-900 mono">${fmtMoney(metrics.totalFixedCost)}</td>
+          <td class="py-3 px-3 text-right text-slate-900 mono">${fmtMoney(metrics.totalIndividualCost)}</td>
+          <td class="py-3 px-3 text-right text-rose-600 mono">${fmtMoney(metrics.totalSpent)}</td>
+          <td class="py-3 px-3 text-right mono ${metrics.cashBalance >= -0.005 ? 'text-emerald-700' : 'text-rose-600'}">
+            ${fmtMoney(metrics.cashBalance)}
+          </td>
+          <td colspan="2" class="py-3 px-3 text-center text-slate-500">Mess Balance</td>
+        </tr>
+      `;
+    }
+
+    function renderMealSheet(monthObj, metrics) {
+      const thead = document.getElementById('mealSheetHead');
+      const tbody = document.getElementById('mealSheetBody');
+      const tfoot = document.getElementById('mealSheetFoot');
+      const editable = canCurrentUserEdit();
+
+      let headHtml = `<tr>
+        <th class="py-3 px-3 text-left sticky-col min-w-[115px]">Date / Day</th>`;
+      monthObj.members.forEach(m => {
+        headHtml += `<th class="py-3 px-2 text-center min-w-[110px] truncate" title="${m.name}">${m.name}</th>`;
+      });
+      headHtml += `<th class="py-3 px-3 text-center bg-slate-900 text-emerald-400 min-w-[90px]">Day Total</th></tr>`;
+      thead.innerHTML = headHtml;
+
+      let bodyHtml = '';
+      for (let d = 1; d <= metrics.days; d++) {
+        const dateObj = new Date(appState.currentYear, appState.currentMonth, d);
+        const dayName = DAY_NAMES[dateObj.getDay()];
+        const isFriday = dateObj.getDay() === 5;
+        const dateLabel = `${String(d).padStart(2, '0')} ${MONTH_NAMES[appState.currentMonth].slice(0, 3)}`;
+
+        bodyHtml += `<tr class="hover:bg-blue-50/30 ${isFriday ? 'bg-amber-50/30' : 'bg-white'}">
+          <td class="py-1.5 px-3 font-semibold text-slate-700 sticky-col flex items-center justify-between">
+            <span class="mono">${dateLabel}</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded ${isFriday ? 'bg-amber-100 text-amber-800 font-bold' : 'text-slate-400'}">${dayName}</span>
+          </td>`;
+
+        monthObj.members.forEach(m => {
+          const val = monthObj.meals[d]?.[m.id] ?? 0;
+          bodyHtml += `<td class="p-1 text-center">
+            <input
+              type="number"
+              step="0.5"
+              min="0"
+              max="30"
+              value="${val}"
+              ${editable ? `onfocus="this.select()" oninput="updateMealCell(${d}, '${m.id}', this.value, false)" onchange="updateMealCell(${d}, '${m.id}', this.value, true)"` : 'readonly disabled'}
+              class="meal-input ${val > 0 ? 'text-slate-900 font-bold' : 'text-slate-300'} ${!editable ? 'cursor-not-allowed opacity-80' : ''}"
+            />
+          </td>`;
+        });
+
+        const rowTotal = metrics.dayTotals[d] || 0;
+        bodyHtml += `<td id="day-total-${d}" class="py-1.5 px-3 text-center font-bold mono bg-slate-50 text-blue-700">${rowTotal.toFixed(1)}</td></tr>`;
+      }
+      tbody.innerHTML = bodyHtml;
+
+      let footHtml = `<tr>
+        <td class="py-3 px-3 sticky-col text-slate-900">Member Total Meals</td>`;
+      monthObj.members.forEach(m => {
+        const mTotal = metrics.memberMeals[m.id] || 0;
+        footHtml += `<td id="member-meal-foot-${m.id}" class="py-3 px-2 text-center text-blue-700 mono text-sm">${mTotal.toFixed(2)}</td>`;
+      });
+      footHtml += `<td id="grand-meal-foot" class="py-3 px-3 text-center bg-blue-600 text-white mono text-sm">${metrics.totalWholeMeals.toFixed(2)}</td></tr>`;
+      tfoot.innerHTML = footHtml;
+    }
+
+    function renderMemberSelectOptions(monthObj) {
+      const optionsHtml = monthObj.members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+      const depMemberEl = document.getElementById('depMember');
+      if (depMemberEl) depMemberEl.innerHTML = optionsHtml;
+
+      const suggestions = document.getElementById('shopperSuggestions');
+      if (suggestions) {
+        suggestions.innerHTML = monthObj.members.map(m => `<option value="${m.name}">`).join('') +
+          `<option value="Masud Rana, Pankaj Mahanta">` +
+          `<option value="Md Leon Ahamed, Aniruddha Kushol Kar">`;
+      }
+    }
+
+    function renderExpenseLog(monthObj, metrics) {
+      const tbody = document.getElementById('expenseListBody');
+      const editable = canCurrentUserEdit();
+      const memberMap = {};
+      monthObj.members.forEach(m => { memberMap[m.id] = m.name; });
+
+      if (monthObj.expenses.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400">No bazaar or other costs recorded for this month yet.</td></tr>`;
+      } else {
+        tbody.innerHTML = monthObj.expenses.slice().reverse().map(e => {
+          const typeLabel = e.type === 'fixed' ? 'Shared' : (e.type === 'individual' ? 'Individual' : 'Bazaar');
+          const typeBadge = e.type === 'fixed'
+            ? 'bg-purple-100 text-purple-800'
+            : (e.type === 'individual' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800');
+          const shopperDisplay = e.shopper || memberMap[e.memberId] || 'Mess';
+
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="py-2.5 px-3 mono text-slate-500 whitespace-nowrap">${e.date.slice(5)}</td>
+              <td class="py-2.5 px-3">
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${typeBadge}">
+                  ${typeLabel}
+                </span>
+              </td>
+              <td class="py-2.5 px-3 font-medium text-slate-800">${shopperDisplay}</td>
+              <td class="py-2.5 px-3 text-slate-600">${e.items}</td>
+              <td class="py-2.5 px-3 text-right font-bold text-slate-900 mono whitespace-nowrap">${fmtMoney(e.amount)}</td>
+              <td class="py-2.5 px-3 text-center no-print whitespace-nowrap">
+                ${editable ? `
+                  <button onclick="openEditExpenseModal('${e.id}')" class="text-blue-600 hover:text-blue-800 mr-2" title="Edit Cost">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button onclick="deleteExpense('${e.id}')" class="text-slate-400 hover:text-rose-600" title="Delete Cost">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                ` : `<i class="fa-solid fa-lock text-slate-300 text-[10px]"></i>`}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('expenseFooter').innerHTML = `
+        <span>Bazaar: ${fmtMoney(metrics.totalBazaarCost)} | Shared: ${fmtMoney(metrics.totalFixedCost)} | Indiv: ${fmtMoney(metrics.totalIndividualCost)}</span>
+        <span>Total Cost: ${fmtMoney(metrics.totalSpent)}</span>
+      `;
+    }
+
+    function renderDepositLog(monthObj, metrics) {
+      const tbody = document.getElementById('depositListBody');
+      const editable = canCurrentUserEdit();
+      const memberMap = {};
+      monthObj.members.forEach(m => { memberMap[m.id] = m.name; });
+
+      if (monthObj.deposits.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-400">No deposits recorded for this month yet.</td></tr>`;
+      } else {
+        tbody.innerHTML = monthObj.deposits.slice().reverse().map(d => {
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="py-2.5 px-3 mono text-slate-500 whitespace-nowrap">${d.date.slice(5)}</td>
+              <td class="py-2.5 px-3 font-semibold text-slate-800">${memberMap[d.memberId] || 'Member'}</td>
+              <td class="py-2.5 px-3 text-slate-500">${d.note || '-'}</td>
+              <td class="py-2.5 px-3 text-right font-bold text-emerald-700 mono whitespace-nowrap">${fmtMoney(d.amount)}</td>
+              <td class="py-2.5 px-3 text-center no-print whitespace-nowrap">
+                ${editable ? `
+                  <button onclick="openEditDepositModal('${d.id}')" class="text-blue-600 hover:text-blue-800 mr-2" title="Edit Deposit">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button onclick="deleteDeposit('${d.id}')" class="text-slate-400 hover:text-rose-600" title="Delete Deposit">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                ` : `<i class="fa-solid fa-lock text-slate-300 text-[10px]"></i>`}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('depositFooter').innerHTML = `
+        <span>Total Entries: ${monthObj.deposits.length}</span>
+        <span>Total Deposit: ${fmtMoney(metrics.totalDeposits)}</span>
+      `;
+    }
+
+    function renderActivityLogs(monthObj) {
+      const tbody = document.getElementById('activityLogBody');
+      const badge = document.getElementById('logCountBadge');
+      const logs = monthObj.logs || [];
+      if (badge) badge.textContent = logs.length;
+
+      if (logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-slate-400">No activity logs recorded yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = logs.map(l => `
+        <tr class="hover:bg-purple-50/30">
+          <td class="py-2.5 px-4 mono text-slate-500 whitespace-nowrap">${l.timestamp}</td>
+          <td class="py-2.5 px-4 font-semibold text-slate-800 whitespace-nowrap">${l.actor}</td>
+          <td class="py-2.5 px-4 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">${l.category}</span>
+          </td>
+          <td class="py-2.5 px-4 text-slate-700">${l.details}</td>
+        </tr>
+      `).join('');
+    }
+
+    function requireEditPermission() {
+      if (!canCurrentUserEdit()) {
+        showToast('View-Only Mode! এডিট করতে Manager PIN দিয়ে আনলক করুন।', false, false);
+        openPinUnlockModal();
+        return false;
+      }
+      return true;
+    }
+
+    function updateMealCell(day, memberId, rawVal, commitLog = false) {
+      if (!requireEditPermission()) return;
+      const val = Math.max(0, parseFloat(rawVal) || 0);
+      const monthObj = getCurrentMonthObj();
+      if (!monthObj.meals[day]) monthObj.meals[day] = {};
+      const prevVal = monthObj.meals[day][memberId] ?? 0;
+      monthObj.meals[day][memberId] = val;
+
+      if (commitLog && prevVal !== val) {
+        const mem = monthObj.members.find(m => m.id === memberId);
+        const dateStr = `${day} ${MONTH_NAMES[appState.currentMonth].slice(0, 3)}`;
+        recordActivityLog('Meal Change', `Updated ${mem ? mem.name : 'Member'}'s meal on ${dateStr}: ${prevVal} → ${val}`);
+        renderActivityLogs(monthObj);
+        showToast(`Meal updated (${prevVal} → ${val}) & logged!`, false, true);
+      }
+
+      saveState(commitLog);
+
+      const metrics = calculateMonthMetrics(monthObj);
+      document.getElementById('kpiTotalMeals').textContent = metrics.totalWholeMeals.toFixed(2);
+      document.getElementById('kpiMealRate').textContent = fmtMoney(metrics.mealRate);
+      const dayTotalEl = document.getElementById(`day-total-${day}`);
+      if (dayTotalEl) dayTotalEl.textContent = (metrics.dayTotals[day] || 0).toFixed(1);
+
+      const memFoot = document.getElementById(`member-meal-foot-${memberId}`);
+      if (memFoot) memFoot.textContent = (metrics.memberMeals[memberId] || 0).toFixed(2);
+
+      const grandFoot = document.getElementById('grand-meal-foot');
+      if (grandFoot) grandFoot.textContent = metrics.totalWholeMeals.toFixed(2);
+
+      renderMemberCards(monthObj, metrics);
+      renderMemberSummary(monthObj, metrics);
+    }
+
+    function addMember(e) {
+      e.preventDefault();
+      if (!requireEditPermission()) return;
+      const nameInput = document.getElementById('newMemberName');
+      const emailInput = document.getElementById('newMemberEmail');
+      const depInput = document.getElementById('newMemberDeposit');
+      const roleInput = document.getElementById('newMemberRole');
+
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim();
+      const initialDeposit = parseFloat(depInput.value) || 0;
+      const role = roleInput ? roleInput.value : 'viewer';
+
+      if (!name) return;
+
+      const monthObj = getCurrentMonthObj();
+      const newId = 'm_' + Date.now();
+      monthObj.members.push({
+        id: newId,
+        name,
+        email,
+        role,
+        specialPermission: role === 'editor' ? 'Can Edit' : 'No Permission',
+        bazarDates: 'No Bazar Date Set'
+      });
+
+      const days = getDaysInMonth(appState.currentYear, appState.currentMonth);
+      for (let d = 1; d <= days; d++) {
+        if (!monthObj.meals[d]) monthObj.meals[d] = {};
+        monthObj.meals[d][newId] = 0;
+      }
+
+      if (initialDeposit !== 0) {
+        const defaultDate = `${appState.currentYear}-${String(appState.currentMonth + 1).padStart(2, '0')}-01`;
+        monthObj.deposits.push({
+          id: 'd_' + Date.now(),
+          date: defaultDate,
+          memberId: newId,
+          amount: initialDeposit,
+          note: 'Initial Deposit'
+        });
+      }
+
+      recordActivityLog('Member Added', `Added new member "${name}" (${email || 'No email'}) with initial deposit ${initialDeposit} ৳`);
+      nameInput.value = '';
+      emailInput.value = '';
+      depInput.value = '';
+      if (roleInput) roleInput.value = 'viewer';
+      saveState();
+      renderAll();
+      showToast(`Added member "${name}"`, false, true);
+    }
+
+    // Universal Edit Modal Functions for Deposits, Expenses, and Members
+    function openEditDepositModal(depId) {
+      if (!requireEditPermission()) return;
+      const monthObj = getCurrentMonthObj();
+      const dep = monthObj.deposits.find(d => d.id === depId);
+      if (!dep) return;
+
+      document.getElementById('editModalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-emerald-600"></i> Edit Deposit Entry`;
+      document.getElementById('editRecordKind').value = 'deposit';
+      document.getElementById('editRecordId').value = dep.id;
+
+      document.getElementById('editDateGroup').classList.remove('hidden');
+      document.getElementById('editMemberSelectGroup').classList.remove('hidden');
+      document.getElementById('editAmountGroup').classList.remove('hidden');
+      document.getElementById('editDetailsGroup').classList.remove('hidden');
+      document.getElementById('editExpenseTypeGroup').classList.add('hidden');
+      document.getElementById('editShopperGroup').classList.add('hidden');
+      document.getElementById('editMemberExtraGroup').classList.add('hidden');
+
+      document.getElementById('editRecordMemberId').innerHTML = monthObj.members.map(m =>
+        `<option value="${m.id}" ${m.id === dep.memberId ? 'selected' : ''}>${m.name}</option>`
+      ).join('');
+      document.getElementById('editRecordDate').value = dep.date;
+      document.getElementById('editRecordAmount').value = dep.amount;
+      document.getElementById('editDetailsLabel').textContent = 'Deposit Note';
+      document.getElementById('editRecordDetails').value = dep.note || '';
+
+      const modal = document.getElementById('editRecordModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function openEditExpenseModal(expId) {
+      if (!requireEditPermission()) return;
+      const monthObj = getCurrentMonthObj();
+      const exp = monthObj.expenses.find(e => e.id === expId);
+      if (!exp) return;
+
+      document.getElementById('editModalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-600"></i> Edit Bazaar / Cost Entry`;
+      document.getElementById('editRecordKind').value = 'expense';
+      document.getElementById('editRecordId').value = exp.id;
+
+      document.getElementById('editDateGroup').classList.remove('hidden');
+      document.getElementById('editExpenseTypeGroup').classList.remove('hidden');
+      document.getElementById('editShopperGroup').classList.remove('hidden');
+      document.getElementById('editAmountGroup').classList.remove('hidden');
+      document.getElementById('editDetailsGroup').classList.remove('hidden');
+      document.getElementById('editMemberSelectGroup').classList.remove('hidden');
+      document.getElementById('editMemberExtraGroup').classList.add('hidden');
+
+      document.getElementById('editRecordMemberId').innerHTML = monthObj.members.map(m =>
+        `<option value="${m.id}" ${m.id === exp.memberId ? 'selected' : ''}>${m.name}</option>`
+      ).join('');
+      document.getElementById('editRecordDate').value = exp.date;
+      document.getElementById('editRecordCostType').value = exp.type || 'bazaar';
+      document.getElementById('editRecordShopper').value = exp.shopper || '';
+      document.getElementById('editRecordAmount').value = exp.amount;
+      document.getElementById('editDetailsLabel').textContent = 'Bazaar / Cost Items Description';
+      document.getElementById('editRecordDetails').value = exp.items || '';
+
+      const modal = document.getElementById('editRecordModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function openEditMemberModal(memId) {
+      if (!requireEditPermission()) return;
+      const monthObj = getCurrentMonthObj();
+      const mem = monthObj.members.find(m => m.id === memId);
+      if (!mem) return;
+
+      document.getElementById('editModalTitle').innerHTML = `<i class="fa-solid fa-user-pen text-blue-600"></i> Edit Member Info & Email`;
+      document.getElementById('editRecordKind').value = 'member';
+      document.getElementById('editRecordId').value = mem.id;
+
+      document.getElementById('editDateGroup').classList.add('hidden');
+      document.getElementById('editExpenseTypeGroup').classList.add('hidden');
+      document.getElementById('editShopperGroup').classList.add('hidden');
+      document.getElementById('editAmountGroup').classList.add('hidden');
+      document.getElementById('editDetailsGroup').classList.add('hidden');
+      document.getElementById('editMemberSelectGroup').classList.add('hidden');
+      document.getElementById('editMemberExtraGroup').classList.remove('hidden');
+
+      document.getElementById('editMemberNameField').value = mem.name || '';
+      document.getElementById('editMemberEmailField').value = mem.email || '';
+      document.getElementById('editMemberBazarDateField').value = mem.bazarDates || '';
+      document.getElementById('editMemberSpecPermField').value = mem.specialPermission || '';
+
+      const modal = document.getElementById('editRecordModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeEditRecordModal() {
+      const modal = document.getElementById('editRecordModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function submitEditRecord(e) {
+      e.preventDefault();
+      if (!requireEditPermission()) return;
+      const kind = document.getElementById('editRecordKind').value;
+      const id = document.getElementById('editRecordId').value;
+      const monthObj = getCurrentMonthObj();
+      const memberMap = {};
+      monthObj.members.forEach(m => { memberMap[m.id] = m.name; });
+
+      if (kind === 'deposit') {
+        const dep = monthObj.deposits.find(d => d.id === id);
+        if (!dep) return;
+        const oldAmt = dep.amount;
+        const oldMember = memberMap[dep.memberId] || 'Member';
+        dep.date = document.getElementById('editRecordDate').value;
+        dep.memberId = document.getElementById('editRecordMemberId').value;
+        dep.amount = parseFloat(document.getElementById('editRecordAmount').value) || 0;
+        dep.note = document.getElementById('editRecordDetails').value.trim();
+        const newMember = memberMap[dep.memberId] || 'Member';
+
+        recordActivityLog('Deposit Edited', `Edited deposit on ${dep.date} (${oldMember} → ${newMember}): ${oldAmt} ৳ → ${dep.amount} ৳ (${dep.note})`);
+      } else if (kind === 'expense') {
+        const exp = monthObj.expenses.find(x => x.id === id);
+        if (!exp) return;
+        const oldAmt = exp.amount;
+        const oldItems = exp.items;
+        exp.date = document.getElementById('editRecordDate').value;
+        exp.type = document.getElementById('editRecordCostType').value;
+        exp.memberId = document.getElementById('editRecordMemberId').value;
+        exp.shopper = document.getElementById('editRecordShopper').value.trim() || memberMap[exp.memberId] || 'Mess';
+        exp.amount = parseFloat(document.getElementById('editRecordAmount').value) || 0;
+        exp.items = document.getElementById('editRecordDetails').value.trim();
+
+        recordActivityLog('Cost Edited', `Edited ${exp.type} cost on ${exp.date} by ${exp.shopper}: ${oldAmt} ৳ → ${exp.amount} ৳ (${oldItems} → ${exp.items})`);
+      } else if (kind === 'member') {
+        const mem = monthObj.members.find(m => m.id === id);
+        if (!mem) return;
+        const oldName = mem.name;
+        mem.name = document.getElementById('editMemberNameField').value.trim() || mem.name;
+        mem.email = document.getElementById('editMemberEmailField').value.trim();
+        mem.bazarDates = document.getElementById('editMemberBazarDateField').value.trim() || 'No Bazar Date Set';
+        mem.specialPermission = document.getElementById('editMemberSpecPermField').value.trim() || 'No Permission';
+
+        recordActivityLog('Member Edited', `Updated member profile "${oldName}" → "${mem.name}" (Email: ${mem.email}, Bazar: ${mem.bazarDates})`);
+      }
+
+      closeEditRecordModal();
+      saveState();
+      renderAll();
+      showToast('Changes saved and recorded in Activity Log!', false, true);
+    }
+
+    let lastBackupSnapshot = null;
+    let toastTimeout = null;
+    let pendingConfirmCallback = null;
+
+    function showToast(message, allowUndo = false, allowEmailNotify = false) {
+      const banner = document.getElementById('toastBanner');
+      const msgEl = document.getElementById('toastMessage');
+      const undoBtn = document.getElementById('toastUndoBtn');
+      const emailBtn = document.getElementById('toastEmailBtn');
+      msgEl.textContent = message;
+
+      if (allowUndo && lastBackupSnapshot) {
+        undoBtn.classList.remove('hidden');
+      } else {
+        undoBtn.classList.add('hidden');
+      }
+
+      if (allowEmailNotify && appState.autoEmailPrompt) {
+        emailBtn.classList.remove('hidden');
+      } else {
+        emailBtn.classList.add('hidden');
+      }
+
+      banner.classList.remove('hidden');
+      banner.classList.add('flex');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+      }, 7000);
+    }
+
+    function undoLastDelete() {
+      if (!lastBackupSnapshot) return;
+      const key = getMonthKey();
+      appState.monthsData[key] = JSON.parse(lastBackupSnapshot);
+      lastBackupSnapshot = null;
+      recordActivityLog('Undo Restore', 'Restored previous state via Undo.');
+      saveState();
+      renderAll();
+      showToast('Restored previous data!', false, false);
+    }
+
+    function openCustomConfirm(title, message, onConfirm) {
+      document.getElementById('confirmModalTitle').innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-600"></i> ${title}`;
+      document.getElementById('confirmModalMessage').textContent = message;
+      pendingConfirmCallback = onConfirm;
+      const btn = document.getElementById('confirmModalBtn');
+      btn.onclick = () => {
+        const cb = pendingConfirmCallback;
+        closeCustomConfirm();
+        if (cb) cb();
+      };
+      const modal = document.getElementById('customConfirmModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCustomConfirm() {
+      const modal = document.getElementById('customConfirmModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      pendingConfirmCallback = null;
+    }
+
+    function removeMember(memberId) {
+      if (!requireEditPermission()) return;
+      const monthObj = getCurrentMonthObj();
+      const mem = monthObj.members.find(m => m.id === memberId);
+      if (!mem) return;
+
+      openCustomConfirm(
+        `Remove ${mem.name}?`,
+        `Are you sure you want to remove "${mem.name}" from this month? You can Undo immediately if needed.`,
+        () => {
+          lastBackupSnapshot = JSON.stringify(monthObj);
+          monthObj.members = monthObj.members.filter(m => m.id !== memberId);
+          Object.keys(monthObj.meals).forEach(d => {
+            if (monthObj.meals[d]) delete monthObj.meals[d][memberId];
+          });
+          monthObj.deposits = monthObj.deposits.filter(d => d.memberId !== memberId);
+          recordActivityLog('Member Removed', `Removed member "${mem.name}" from active sheet.`);
+          saveState();
+          renderAll();
+          showToast(`Deleted member "${mem.name}"`, true, true);
+        }
+      );
+    }
+
+    function toggleMemberRole(memberId) {
+      if (!requireEditPermission()) return;
+      const monthObj = getCurrentMonthObj();
+      const mem = monthObj.members.find(m => m.id === memberId);
+      if (!mem) return;
+      mem.role = (mem.role === 'editor' || mem.role === 'manager') ? 'viewer' : 'editor';
+      recordActivityLog('Permission Changed', `Changed "${mem.name}" permission to ${mem.role === 'editor' ? 'Can Edit' : 'View-Only'}.`);
+      saveState();
+      renderAll();
+      if (!document.getElementById('accessControlModal').classList.contains('hidden')) {
+        renderAccessControlModalContent();
+      }
+      showToast(`"${mem.name}" is now ${mem.role === 'editor' ? 'allowed to Edit' : 'View-Only'}`, false, true);
+    }
+
+    function openAccessControlModal() {
+      renderAccessControlModalContent();
+      const modal = document.getElementById('accessControlModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAccessControlModal() {
+      const modal = document.getElementById('accessControlModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function renderAccessControlModalContent() {
+      const monthObj = getCurrentMonthObj();
+      const editable = canCurrentUserEdit();
+      document.getElementById('managerPinInput').value = appState.managerPin || '1234';
+
+      const desc = document.getElementById('modalProtectionDesc');
+      const toggleBtn = document.getElementById('modalLockToggleBtn');
+      const pinBox = document.getElementById('managerPinSettingsBox');
+
+      if (editable) {
+        desc.textContent = 'Sheet is currently UNLOCKED (You can edit everything)';
+        toggleBtn.textContent = 'Lock Sheet (View-Only)';
+        toggleBtn.className = 'px-3 py-1.5 rounded-lg font-semibold bg-amber-600 text-white hover:bg-amber-500 transition';
+        pinBox.classList.remove('hidden');
+      } else {
+        desc.textContent = 'Sheet is LOCKED in View-Only mode (Editing disabled)';
+        toggleBtn.textContent = 'Unlock with Manager PIN';
+        toggleBtn.className = 'px-3 py-1.5 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-500 transition';
+        pinBox.classList.add('hidden');
+      }
+
+      const simSelect = document.getElementById('activeUserSimulator');
+      let simHtml = `<option value="admin" ${appState.activeViewerId === 'admin' ? 'selected' : ''}>👑 Pankaj Mahanta (Manager - Full Edit Access)</option>`;
+      monthObj.members.forEach(m => {
+        const isEditor = m.role === 'editor' || m.role === 'manager';
+        simHtml += `<option value="${m.id}" ${appState.activeViewerId === m.id ? 'selected' : ''}>${isEditor ? '✍️' : '👁️'} ${m.name} (${isEditor ? 'Can Edit' : 'View-Only'})</option>`;
+      });
+      simSelect.innerHTML = simHtml;
+
+      const listEl = document.getElementById('memberPermissionsList');
+      listEl.innerHTML = monthObj.members.map(m => {
+        const isEditor = m.role === 'editor' || m.role === 'manager';
+        return `
+          <div class="p-3 bg-white flex items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-[11px]">${m.name.charAt(0).toUpperCase()}</span>
+              <div>
+                <div class="font-bold text-slate-800">${m.name}</div>
+                <div class="text-[11px] text-slate-400">${m.email || 'No email'}</div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onclick="toggleMemberRole('${m.id}')"
+              class="px-3 py-1.5 rounded-lg font-semibold transition ${isEditor ? 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}"
+            >
+              ${isEditor ? '✍️ Can Edit' : '👁️ View Only'}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function switchSimulatedUser(userId) {
+      if (userId === 'admin' && !canCurrentUserEdit()) {
+        closeAccessControlModal();
+        openPinUnlockModal();
+        return;
+      }
+      appState.activeViewerId = userId;
+      if (userId === 'admin') {
+        appState.isLockedViewOnly = false;
+      }
+      saveState();
+      renderAll();
+      renderAccessControlModalContent();
+    }
+
+    function toggleQuickLock() {
+      if (canCurrentUserEdit()) {
+        appState.isLockedViewOnly = true;
+        saveState();
+        renderAll();
+        if (!document.getElementById('accessControlModal').classList.contains('hidden')) {
+          renderAccessControlModalContent();
+        }
+        showToast('Sheet Locked in View-Only Mode!', false, false);
+      } else {
+        closeAccessControlModal();
+        openPinUnlockModal();
+      }
+    }
+
+    function saveManagerPin() {
+      if (!requireEditPermission()) return;
+      const val = document.getElementById('managerPinInput').value.trim();
+      if (!val) return;
+      appState.managerPin = val;
+      saveState();
+      showToast('Manager PIN saved!', false, false);
+    }
+
+    function openPinUnlockModal() {
+      document.getElementById('unlockPinField').value = '';
+      document.getElementById('pinErrorMsg').classList.add('hidden');
+      const modal = document.getElementById('pinUnlockModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => document.getElementById('unlockPinField').focus(), 50);
+    }
+
+    function closePinUnlockModal() {
+      const modal = document.getElementById('pinUnlockModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function submitPinUnlock(e) {
+      e.preventDefault();
+      const entered = document.getElementById('unlockPinField').value.trim();
+      const correctPin = appState.managerPin || '1234';
+      if (entered === correctPin) {
+        appState.isLockedViewOnly = false;
+        appState.activeViewerId = 'admin';
+        saveState();
+        closePinUnlockModal();
+        renderAll();
+        showToast('Manager Mode Unlocked! এখন সব এডিট করতে পারবেন।', false, false);
+      } else {
+        document.getElementById('pinErrorMsg').classList.remove('hidden');
+      }
+    }
+
+    function quickDepositPrompt(memberId) {
+      if (!requireEditPermission()) return;
+      const monthObj = getCurrentMonthObj();
+      const mem = monthObj.members.find(m => m.id === memberId);
+      if (!mem) return;
+
+      document.getElementById('quickDepMemberId').value = mem.id;
+      document.getElementById('quickDepMemberName').textContent = mem.name;
+      document.getElementById('quickDepDate').value = `${appState.currentYear}-${String(appState.currentMonth + 1).padStart(2, '0')}-24`;
+      document.getElementById('quickDepAmount').value = '';
+      document.getElementById('quickDepNote').value = 'Cash Deposit';
+
+      const modal = document.getElementById('quickDepositModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => document.getElementById('quickDepAmount').focus(), 50);
+    }
+
+    function closeQuickDepositModal() {
+      const modal = document.getElementById('quickDepositModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function submitQuickDeposit(e) {
+      e.preventDefault();
+      if (!requireEditPermission()) return;
+      const memberId = document.getElementById('quickDepMemberId').value;
+      const dateStr = document.getElementById('quickDepDate').value;
+      const amount = parseFloat(document.getElementById('quickDepAmount').value);
+      const note = document.getElementById('quickDepNote').value.trim() || 'Deposit';
+      if (!memberId || isNaN(amount) || amount === 0) return;
+
+      const monthObj = getCurrentMonthObj();
+      const mem = monthObj.members.find(m => m.id === memberId);
+      monthObj.deposits.push({
+        id: 'd_' + Date.now(),
+        date: dateStr,
+        memberId,
+        amount,
+        note
+      });
+
+      recordActivityLog('Deposit Added', `Added deposit ${amount} ৳ for ${mem ? mem.name : 'Member'} on ${dateStr} (${note})`);
+      saveState();
+      closeQuickDepositModal();
+      renderAll();
+      showToast(`Added ${amount} ৳ deposit for ${mem ? mem.name : 'Member'}!`, false, true);
+    }
+
+    function addExpense(e) {
+      e.preventDefault();
+      if (!requireEditPermission()) return;
+      const date = document.getElementById('costDate').value;
+      const type = document.getElementById('costType').value;
+      const shopperCustom = document.getElementById('costShopperCustom').value.trim();
+      const items = document.getElementById('costItems').value.trim();
+      const amount = parseFloat(document.getElementById('costAmount').value);
+
+      if (!items || isNaN(amount)) return;
+
+      const monthObj = getCurrentMonthObj();
+      const matchedMember = monthObj.members.find(m => shopperCustom.toLowerCase().includes(m.name.toLowerCase())) || monthObj.members[0];
+      const memberId = matchedMember ? matchedMember.id : '';
+      const shopper = shopperCustom || (matchedMember ? matchedMember.name : 'Mess');
+
+      monthObj.expenses.push({
+        id: 'e_' + Date.now(),
+        date,
+        type,
+        memberId,
+        shopper,
+        items,
+        amount
+      });
+
+      recordActivityLog('Cost Added', `Added ${type} cost of ${amount} ৳ by ${shopper} on ${date}: "${items}"`);
+      document.getElementById('costItems').value = '';
+      document.getElementById('costAmount').value = '';
+      saveState();
+      renderAll();
+      showToast(`Added ${amount} ৳ cost entry & logged!`, false, true);
+    }
+
+    function deleteExpense(id) {
+      if (!requireEditPermission()) return;
+      const monthObj = getCurrentMonthObj();
+      const exp = monthObj.expenses.find(e => e.id === id);
+      if (!exp) return;
+      lastBackupSnapshot = JSON.stringify(monthObj);
+      monthObj.expenses = monthObj.expenses.filter(e => e.id !== id);
+      recordActivityLog('Cost Deleted', `Deleted ${exp.type} cost of ${exp.amount} ৳ (${exp.items}) on ${exp.date}`);
+      saveState();
+      renderAll();
+      showToast(`Deleted cost (${exp.amount} ৳)`, true, true);
+    }
+
+    function addDeposit(e) {
+      e.preventDefault();
+      if (!requireEditPermission()) return;
+      const date = document.getElementById('depDate').value;
+      const memberId = document.getElementById('depMember').value;
+      const amount = parseFloat(document.getElementById('depAmount').value);
+      const note = document.getElementById('depNote').value.trim() || 'Deposit';
+
+      if (isNaN(amount)) return;
+
+      const monthObj = getCurrentMonthObj();
+      const mem = monthObj.members.find(m => m.id === memberId);
+      monthObj.deposits.push({
+        id: 'd_' + Date.now(),
+        date,
+        memberId,
+        amount,
+        note
+      });
+
+      recordActivityLog('Deposit Added', `Added deposit of ${amount} ৳ for ${mem ? mem.name : 'Member'} on ${date} (${note})`);
+      document.getElementById('depAmount').value = '';
+      document.getElementById('depNote').value = '';
+      saveState();
+      renderAll();
+      showToast(`Recorded ${amount} ৳ deposit for ${mem ? mem.name : 'Member'}!`, false, true);
+    }
+
+    function deleteDeposit(id) {
+      if (!requireEditPermission()) return;
+      const monthObj = getCurrentMonthObj();
+      const dep = monthObj.deposits.find(d => d.id === id);
+      if (!dep) return;
+      const mem = monthObj.members.find(m => m.id === dep.memberId);
+      lastBackupSnapshot = JSON.stringify(monthObj);
+      monthObj.deposits = monthObj.deposits.filter(d => d.id !== id);
+      recordActivityLog('Deposit Deleted', `Deleted deposit of ${dep.amount} ৳ for ${mem ? mem.name : 'Member'} (${dep.date})`);
+      saveState();
+      renderAll();
+      showToast(`Deleted deposit (${dep.amount} ৳)`, true, true);
+    }
+
+    function bulkFillMeals(mealCount) {
+      if (!requireEditPermission()) return;
+      const label = mealCount === 0 ? 'clear all meals to 0' : `fill ${mealCount} meals/day for every member`;
+      openCustomConfirm(
+        'Update All Daily Meals?',
+        `Are you sure you want to ${label}?`,
+        () => {
+          const monthObj = getCurrentMonthObj();
+          lastBackupSnapshot = JSON.stringify(monthObj);
+          const days = getDaysInMonth(appState.currentYear, appState.currentMonth);
+          for (let d = 1; d <= days; d++) {
+            if (!monthObj.meals[d]) monthObj.meals[d] = {};
+            monthObj.members.forEach(m => {
+              monthObj.meals[d][m.id] = mealCount;
+            });
+          }
+          recordActivityLog('Bulk Meal Update', `Set all daily meals for ${MONTH_NAMES[appState.currentMonth]} to ${mealCount}.`);
+          saveState();
+          renderAll();
+          showToast(`Updated all days to ${mealCount} meals/day.`, true, true);
+        }
+      );
+    }
+
+    function switchMonthYear() {
+      appState.currentMonth = parseInt(document.getElementById('monthSelect').value, 10);
+      appState.currentYear = parseInt(document.getElementById('yearSelect').value, 10);
+      const dateStr = `${appState.currentYear}-${String(appState.currentMonth + 1).padStart(2, '0')}-01`;
+      document.getElementById('costDate').value = dateStr;
+      document.getElementById('depDate').value = dateStr;
+      saveState();
+      renderAll();
+    }
+
+    function stepMonth(delta) {
+      let m = appState.currentMonth + delta;
+      let y = appState.currentYear;
+      if (m > 11) { m = 0; y++; }
+      if (m < 0) { m = 11; y--; }
+      appState.currentMonth = m;
+      appState.currentYear = y;
+      saveState();
+      renderAll();
+    }
+
+    function openCarryForwardModal() {
+      if (!requireEditPermission()) return;
+      const modal = document.getElementById('carryForwardModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCarryForwardModal() {
+      const modal = document.getElementById('carryForwardModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function confirmCarryForward() {
+      if (!requireEditPermission()) return;
+      const carryBalances = document.getElementById('carryBalancesCheckbox').checked;
+      const prefillTwoMeals = document.getElementById('defaultMealsCheckbox').checked;
+
+      const currentObj = getCurrentMonthObj();
+      const currentMetrics = calculateMonthMetrics(currentObj);
+
+      let nextMonth = appState.currentMonth + 1;
+      let nextYear = appState.currentYear;
+      if (nextMonth > 11) {
+        nextMonth = 0;
+        nextYear++;
+      }
+
+      const nextKey = getMonthKey(nextYear, nextMonth);
+      const nextDateStr = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-01`;
+
+      const openingDeposits = [];
+      if (carryBalances) {
+        currentMetrics.memberSummaries.forEach(ms => {
+          if (Math.abs(ms.balance) >= 0.01) {
+            openingDeposits.push({
+              id: 'd_cf_' + ms.id + '_' + Date.now(),
+              date: nextDateStr,
+              memberId: ms.id,
+              amount: Number(ms.balance.toFixed(2)),
+              note: `Carried forward balance from ${MONTH_NAMES[appState.currentMonth]}`
+            });
+          }
+        });
+      }
+
+      appState.monthsData[nextKey] = createBlankMonthData(
+        nextYear,
+        nextMonth,
+        currentObj.members,
+        prefillTwoMeals ? 2 : 0,
+        openingDeposits
+      );
+
+      appState.currentMonth = nextMonth;
+      appState.currentYear = nextYear;
+      saveState();
+      closeCarryForwardModal();
+      renderAll();
+      showToast(`Created & switched to ${MONTH_NAMES[nextMonth]} ${nextYear}!`, false, false);
+    }
+
+    // PDF REPORT GENERATION (Matches messmanager.app-Hisably-October.pdf)
+    function openPdfReportModal() {
+      const monthObj = getCurrentMonthObj();
+      const metrics = calculateMonthMetrics(monthObj);
+      const periodName = `${MONTH_NAMES[appState.currentMonth]} ${appState.currentYear}`;
+      const memberMap = {};
+      monthObj.members.forEach(m => { memberMap[m.id] = m.name; });
+
+      // Build Day-wise non-zero meal rows or full summary for PDF
+      let mealRowsHtml = '';
+      for (let d = metrics.days; d >= 1; d--) {
+        if ((metrics.dayTotals[d] || 0) > 0) {
+          monthObj.members.forEach(m => {
+            const mVal = monthObj.meals[d]?.[m.id] || 0;
+            mealRowsHtml += `
+              <tr class="border-b border-slate-200">
+                <td class="py-1.5 px-3">${d} ${MONTH_NAMES[appState.currentMonth].slice(0, 3)}</td>
+                <td class="py-1.5 px-3 font-medium">${m.name}</td>
+                <td class="py-1.5 px-3 text-center">0</td>
+                <td class="py-1.5 px-3 text-center">0</td>
+                <td class="py-1.5 px-3 text-center font-bold">${mVal}</td>
+              </tr>
+            `;
+          });
+        }
+      }
+
+      const area = document.getElementById('pdfPrintableArea');
+      area.innerHTML = `
+        <div class="border-b-2 border-slate-800 pb-4 flex items-center justify-between">
+          <div>
+            <h1 class="text-xl font-bold text-slate-900">Mess Manager: Find Meal Expense Easily</h1>
+            <p class="text-xs text-slate-500">Official Monthly Statement & Audit Report — Generated on ${formatNowTimestamp()}</p>
+          </div>
+          <div class="text-right">
+            <div class="text-base font-bold text-rose-600">${appState.messName || 'Hisably'}</div>
+            <div class="text-xs font-semibold text-slate-600">Month: ${periodName}</div>
+          </div>
+        </div>
+
+        <!-- Active Month Details Box -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <h2 class="text-sm font-bold text-slate-900 mb-2 uppercase tracking-wider">Active Month Details</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+            <div><span class="text-slate-500">Month Title:</span> <strong>${MONTH_NAMES[appState.currentMonth]}</strong></div>
+            <div><span class="text-slate-500">Mess Name:</span> <strong>${appState.messName || 'Hisably'}</strong></div>
+            <div><span class="text-slate-500">Mess Balance:</span> <strong class="mono">${fmtMoney(metrics.cashBalance)}</strong></div>
+            <div><span class="text-slate-500">Mess Total Meal:</span> <strong class="mono">${metrics.totalWholeMeals.toFixed(2)}</strong></div>
+            <div><span class="text-slate-500">Mess Total Deposit:</span> <strong class="mono">${fmtMoney(metrics.totalDeposits)}</strong></div>
+            <div><span class="text-slate-500">Mess Total Meal Cost:</span> <strong class="mono">${fmtMoney(metrics.totalBazaarCost)}</strong></div>
+            <div><span class="text-slate-500">Mess Meal Rate:</span> <strong class="mono text-blue-700">${fmtMoney(metrics.mealRate)}</strong></div>
+            <div><span class="text-slate-500">Total Shared Cost:</span> <strong class="mono">${fmtMoney(metrics.totalFixedCost)}</strong></div>
+            <div><span class="text-slate-500">Total Individual Cost:</span> <strong class="mono">${fmtMoney(metrics.totalIndividualCost)}</strong></div>
+            <div class="col-span-2 sm:col-span-3 pt-1 border-t border-slate-200">
+              <span class="text-slate-700 font-bold">Mess Total Cost (Meal+Other):</span> <strong class="mono text-rose-600">${fmtMoney(metrics.totalSpent)}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Member Summary Info Table -->
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Member Summary Info Table</h3>
+          <table class="w-full text-xs border border-slate-300 border-collapse">
+            <thead>
+              <tr class="bg-slate-800 text-white">
+                <th class="py-2 px-3 text-left border border-slate-300">Member Name</th>
+                <th class="py-2 px-3 text-center border border-slate-300">Total Meal</th>
+                <th class="py-2 px-3 text-right border border-slate-300">Total Deposit</th>
+                <th class="py-2 px-3 text-right border border-slate-300">Total Cost (Meal+Shared+Indiv)</th>
+                <th class="py-2 px-3 text-right border border-slate-300">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${metrics.memberSummaries.map(m => `
+                <tr class="border-b border-slate-200">
+                  <td class="py-2 px-3 font-semibold border border-slate-200">${m.name}</td>
+                  <td class="py-2 px-3 text-center mono border border-slate-200">${m.meals.toFixed(2)}</td>
+                  <td class="py-2 px-3 text-right mono border border-slate-200">${m.deposit.toFixed(2)}</td>
+                  <td class="py-2 px-3 text-right mono border border-slate-200">${m.totalCost.toFixed(2)}</td>
+                  <td class="py-2 px-3 text-right font-bold mono border border-slate-200 ${m.balance >= -0.005 ? 'text-emerald-700' : 'text-rose-600'}">
+                    ${m.balance.toFixed(2)} (${m.balance >= -0.005 ? 'পাবে' : 'দিবে'})
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Deposit Table -->
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Deposit Table</h3>
+          <table class="w-full text-xs border border-slate-300 border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-800">
+                <th class="py-2 px-3 text-left border border-slate-300">Member Name</th>
+                <th class="py-2 px-3 text-right border border-slate-300">Deposit Amount</th>
+                <th class="py-2 px-3 text-left border border-slate-300">Date & Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${monthObj.deposits.slice().reverse().map(d => `
+                <tr>
+                  <td class="py-1.5 px-3 border border-slate-200 font-medium">${memberMap[d.memberId] || 'Member'}</td>
+                  <td class="py-1.5 px-3 text-right mono border border-slate-200 font-bold">${d.amount}</td>
+                  <td class="py-1.5 px-3 border border-slate-200">${d.date} (${d.note || ''})</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Meal/Bazar Cost & Shared Cost Table -->
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Meal/Bazar & Shared Other Cost Table</h3>
+          <table class="w-full text-xs border border-slate-300 border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-800">
+                <th class="py-2 px-3 text-left border border-slate-300">Shopper's Name</th>
+                <th class="py-2 px-3 text-center border border-slate-300">Type</th>
+                <th class="py-2 px-3 text-right border border-slate-300">Cost Amount</th>
+                <th class="py-2 px-3 text-left border border-slate-300">Cost Details</th>
+                <th class="py-2 px-3 text-left border border-slate-300">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${monthObj.expenses.slice().reverse().map(e => `
+                <tr>
+                  <td class="py-1.5 px-3 border border-slate-200 font-medium">${e.shopper || memberMap[e.memberId] || 'Mess'}</td>
+                  <td class="py-1.5 px-3 text-center border border-slate-200">${e.type === 'fixed' ? 'Shared' : (e.type === 'individual' ? 'Individual' : 'Bazaar')}</td>
+                  <td class="py-1.5 px-3 text-right mono border border-slate-200 font-bold">${e.amount}</td>
+                  <td class="py-1.5 px-3 border border-slate-200">${e.items}</td>
+                  <td class="py-1.5 px-3 border border-slate-200 whitespace-nowrap">${e.date}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Meal Table -->
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Meal Table (Active Entries)</h3>
+          <table class="w-full text-xs border border-slate-300 border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-800">
+                <th class="py-2 px-3 text-left border border-slate-300">Date</th>
+                <th class="py-2 px-3 text-left border border-slate-300">Member Name</th>
+                <th class="py-2 px-3 text-center border border-slate-300">Breakfast</th>
+                <th class="py-2 px-3 text-center border border-slate-300">Lunch</th>
+                <th class="py-2 px-3 text-center border border-slate-300">Dinner / Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${mealRowsHtml}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Recent Change Log Summary in PDF -->
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 mb-2">Recent Audit & Change Log</h3>
+          <table class="w-full text-xs border border-slate-300 border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-800">
+                <th class="py-1.5 px-3 text-left border border-slate-300">Timestamp</th>
+                <th class="py-1.5 px-3 text-left border border-slate-300">By</th>
+                <th class="py-1.5 px-3 text-left border border-slate-300">Action Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(monthObj.logs || []).slice(0, 15).map(l => `
+                <tr>
+                  <td class="py-1 px-3 border border-slate-200 mono">${l.timestamp}</td>
+                  <td class="py-1 px-3 border border-slate-200">${l.actor}</td>
+                  <td class="py-1 px-3 border border-slate-200">[${l.category}] ${l.details}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      const modal = document.getElementById('pdfReportModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closePdfReportModal() {
+      const modal = document.getElementById('pdfReportModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function downloadPdfFile() {
+      const element = document.getElementById('pdfPrintableArea');
+      const btn = document.getElementById('downloadPdfBtn');
+      const period = `${MONTH_NAMES[appState.currentMonth]}_${appState.currentYear}`;
+      if (typeof html2pdf === 'undefined') {
+        window.print();
+        return;
+      }
+      btn.textContent = 'Generating PDF...';
+      const opt = {
+        margin: 8,
+        filename: `messmanager.app-Black_Diamond-${period}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save().then(() => {
+        btn.innerHTML = `<i class="fa-solid fa-download"></i> Download PDF File`;
+        showToast('PDF Report downloaded successfully!', false, false);
+      });
+    }
+
+    // SHARE & EMAIL NOTIFICATION SYSTEM
+    function openShareAndEmailModal() {
+      const monthObj = getCurrentMonthObj();
+      document.getElementById('sharePinDisplay').textContent = appState.managerPin || '1234';
+      document.getElementById('autoEmailPromptToggle').checked = !!appState.autoEmailPrompt;
+
+      const dir = document.getElementById('memberEmailDirectory');
+      dir.innerHTML = monthObj.members.map(m => `
+        <div class="p-2.5 flex items-center justify-between gap-2">
+          <div>
+            <span class="font-bold text-slate-800">${m.name}</span>
+            <span class="text-slate-500 block">${m.email || 'No email set'}</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="openEditMemberModal('${m.id}')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded font-semibold">
+              Edit Email
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      const modal = document.getElementById('shareAndEmailModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeShareAndEmailModal() {
+      const modal = document.getElementById('shareAndEmailModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function toggleAutoEmailSetting(checked) {
+      appState.autoEmailPrompt = checked;
+      saveState();
+    }
+
+    function copyText(txt) {
+      const ta = document.createElement('textarea');
+      ta.value = txt;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(`Copied: ${txt}`, false, false);
+    }
+
+    function copyShareLink(mode) {
+      const baseUrl = window.location.href.split('?')[0];
+      const url = mode === 'viewonly' ? `${baseUrl}?mode=viewonly` : baseUrl;
+      copyText(url);
+      showToast(mode === 'viewonly' ? 'Member View-Only Link copied!' : 'Manager Link copied!', false, false);
+    }
+
+    function copyUpdatedHtmlForGoogleSites(lockByDefault = true) {
+      const exportState = JSON.parse(JSON.stringify(appState));
+      if (lockByDefault) {
+        exportState.isLockedViewOnly = true;
+      }
+      const stateJson = JSON.stringify(exportState).replace(/<\/script>/gi, '<\\/script>');
+      const stateScriptTag = `<script id="embedded-saved-state">window.__SAVED_MESS_STATE__ = ${stateJson};<\/script>`;
+
+      let fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const existingEmbeddedRegex = /<script id="embedded-saved-state">[\s\S]*?<\/script>/i;
+      if (existingEmbeddedRegex.test(fullHtml)) {
+        fullHtml = fullHtml.replace(existingEmbeddedRegex, stateScriptTag);
+      } else {
+        fullHtml = fullHtml.replace('</head>', `  ${stateScriptTag}\n</head>`);
+      }
+
+      const ta = document.createElement('textarea');
+      ta.value = fullHtml;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+
+      showToast('আপডেট করা সম্পূর্ণ HTML কোড কপি হয়েছে! এখন যেকোনো হোস্টিংয়ে পেস্ট করতে পারেন।', false, false);
+    }
+
+    function downloadStandaloneHtmlFile(lockByDefault = true, useIndexName = false) {
+      const exportState = JSON.parse(JSON.stringify(appState));
+      if (lockByDefault) {
+        exportState.isLockedViewOnly = true;
+      }
+      const stateJson = JSON.stringify(exportState).replace(/<\/script>/gi, '<\\/script>');
+      const stateScriptTag = `<script id="embedded-saved-state">window.__SAVED_MESS_STATE__ = ${stateJson};<\/script>`;
+
+      let fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      const existingEmbeddedRegex = /<script id="embedded-saved-state">[\s\S]*?<\/script>/i;
+      if (existingEmbeddedRegex.test(fullHtml)) {
+        fullHtml = fullHtml.replace(existingEmbeddedRegex, stateScriptTag);
+      } else {
+        fullHtml = fullHtml.replace('</head>', `  ${stateScriptTag}\n</head>`);
+      }
+
+      const period = `${MONTH_NAMES[appState.currentMonth]}_${appState.currentYear}`;
+      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = useIndexName ? 'index.html' : `Black_Diamond_Mess_${period}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('index.html ফাইল ডাউনলোড হয়েছে! এখন tiiny.host-এ আপলোড করে লিংক নিন।', false, false);
+    }
+
+    function buildEmailSummaryBody(customHeader = '') {
+      const monthObj = getCurrentMonthObj();
+      const metrics = calculateMonthMetrics(monthObj);
+      const period = `${MONTH_NAMES[appState.currentMonth]} ${appState.currentYear}`;
+
+      const lines = [];
+      if (customHeader) {
+        lines.push(customHeader);
+        lines.push('----------------------------------------');
+      }
+      lines.push(`Mess Name: ${appState.messName || 'Hisably'} (${period})`);
+      lines.push(`Updated On: ${formatNowTimestamp()}`);
+      lines.push(`Total Meal: ${metrics.totalWholeMeals.toFixed(2)} | Meal Rate: ${metrics.mealRate.toFixed(2)} ৳`);
+      lines.push(`Total Deposit: ${metrics.totalDeposits.toFixed(2)} ৳ | Total Cost: ${metrics.totalSpent.toFixed(2)} ৳ | Mess Balance: ${metrics.cashBalance.toFixed(2)} ৳`);
+      lines.push('');
+      lines.push('--- MEMBER SUMMARY ---');
+      metrics.memberSummaries.forEach(m => {
+        const status = m.balance >= -0.005 ? 'পাবে (Gets)' : 'দিবে (Payable)';
+        lines.push(`${m.name}: Meal=${m.meals.toFixed(2)}, Deposit=${m.deposit.toFixed(2)} ৳, Cost=${m.totalCost.toFixed(2)} ৳, Balance=${m.balance.toFixed(2)} ৳ (${status})`);
+      });
+
+      const recentLogs = (monthObj.logs || []).slice(0, 5);
+      if (recentLogs.length > 0) {
+        lines.push('');
+        lines.push('--- RECENT ACTIVITY LOG ---');
+        recentLogs.forEach(l => {
+          lines.push(`[${l.timestamp}] (${l.actor}) ${l.category}: ${l.details}`);
+        });
+      }
+
+      return lines.join('\n');
+    }
+
+    function sendInstantEmailSummary() {
+      const monthObj = getCurrentMonthObj();
+      const emails = monthObj.members.map(m => m.email).filter(Boolean).join(',');
+      if (!emails) {
+        showToast('No member emails found! Please add member emails first.', false, false);
+        return;
+      }
+      const period = `${MONTH_NAMES[appState.currentMonth]} ${appState.currentYear}`;
+      const subject = encodeURIComponent(`Hisably Mess Update - ${period} (${formatNowTimestamp()})`);
+      const body = encodeURIComponent(buildEmailSummaryBody('Hisably Mess Sheet has been updated. Please check the latest summary and change log below:'));
+      window.open(`mailto:${emails}?subject=${subject}&body=${body}`, '_blank');
+    }
+
+    function sendLastActionEmail() {
+      const monthObj = getCurrentMonthObj();
+      const emails = monthObj.members.map(m => m.email).filter(Boolean).join(',');
+      if (!emails) {
+        showToast('No member emails configured.', false, false);
+        return;
+      }
+      const header = lastLoggedEntry
+        ? `Latest Change [${lastLoggedEntry.timestamp}] by ${lastLoggedEntry.actor}:\n${lastLoggedEntry.category} -> ${lastLoggedEntry.details}`
+        : 'Mess Sheet Updated';
+      const subject = encodeURIComponent(`Mess Sheet Change Alert: ${lastLoggedEntry ? lastLoggedEntry.category : 'Update'}`);
+      const body = encodeURIComponent(buildEmailSummaryBody(header));
+      window.open(`mailto:${emails}?subject=${subject}&body=${body}`, '_blank');
+    }
+
+    function switchTab(tab) {
+      const sections = {
+        top: document.getElementById('section-top-cards'),
+        cards: document.getElementById('section-member-cards'),
+        summary: document.getElementById('section-summary'),
+        meals: document.getElementById('section-meals'),
+        expenses: document.getElementById('section-expenses'),
+        logs: document.getElementById('section-logs')
+      };
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.className = 'tab-btn bg-white text-slate-700 hover:bg-slate-100 text-xs font-semibold px-3.5 py-2 rounded-lg border border-slate-200 flex items-center gap-1.5';
+      });
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      if (activeBtn) {
+        activeBtn.className = 'tab-btn bg-slate-900 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5';
+      }
+
+      Object.values(sections).forEach(sec => {
+        if (sec) sec.classList.add('hidden');
+      });
+
+      if (tab === 'all') {
+        Object.values(sections).forEach(sec => {
+          if (sec) sec.classList.remove('hidden');
+        });
+      } else if (tab === 'members') {
+        sections.top?.classList.remove('hidden');
+        sections.cards?.classList.remove('hidden');
+        sections.summary?.classList.remove('hidden');
+      } else if (tab === 'meals') {
+        sections.meals?.classList.remove('hidden');
+      } else if (tab === 'expenses') {
+        sections.expenses?.classList.remove('hidden');
+      } else if (tab === 'logs') {
+        sections.logs?.classList.remove('hidden');
+      }
+    }
+
+    function exportFullCSV() {
+      const monthObj = getCurrentMonthObj();
+      const metrics = calculateMonthMetrics(monthObj);
+      const period = `${MONTH_NAMES[appState.currentMonth]}_${appState.currentYear}`;
+      const rows = [];
+
+      rows.push([`${appState.messName || 'Hisably'} - ${MONTH_NAMES[appState.currentMonth]} ${appState.currentYear}`]);
+      rows.push(['Total Meals', metrics.totalWholeMeals.toFixed(2), 'Meal Rate', metrics.mealRate.toFixed(2), 'Total Deposit', metrics.totalDeposits.toFixed(2), 'Total Cost', metrics.totalSpent.toFixed(2), 'Mess Balance', metrics.cashBalance.toFixed(2)]);
+      rows.push([]);
+
+      rows.push(['MEMBER SUMMARY']);
+      rows.push(['Member Name', 'Email', 'Total Meal', 'Total Deposit', 'Meal Cost', 'Shared Cost', 'Individual Cost', 'Total Cost', 'Balance', 'Status']);
+      metrics.memberSummaries.forEach(m => {
+        rows.push([
+          m.name,
+          m.email,
+          m.meals.toFixed(2),
+          m.deposit.toFixed(2),
+          m.mealCost.toFixed(2),
+          m.fixedCost.toFixed(2),
+          m.individualCost.toFixed(2),
+          m.totalCost.toFixed(2),
+          m.balance.toFixed(2),
+          m.balance >= -0.005 ? 'Gets (পাবে)' : 'Payable (দিবে)'
+        ]);
+      });
+      rows.push([]);
+
+      rows.push(['DAILY MEAL SHEET']);
+      rows.push(['Date', ...monthObj.members.map(m => m.name), 'Day Total']);
+      for (let d = 1; d <= metrics.days; d++) {
+        const dRow = [`${d} ${MONTH_NAMES[appState.currentMonth].slice(0, 3)}`];
+        monthObj.members.forEach(m => {
+          dRow.push(monthObj.meals[d]?.[m.id] ?? 0);
+        });
+        dRow.push((metrics.dayTotals[d] || 0).toFixed(1));
+        rows.push(dRow);
+      }
+
+      const csvContent = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Black_Diamond_Mess_${period}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Excel (.CSV) downloaded!', false, false);
+    }
+
+    // Persistent LocalStorage + Cloud Sync Initialization
+    const LOCAL_STORAGE_KEY = 'black_diamond_mess_pro_state_v3';
+
+    function loadSavedLocalState() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const forceViewOnly = urlParams.get('mode') === 'viewonly';
+
+        if (window.__SAVED_MESS_STATE__ && window.__SAVED_MESS_STATE__.monthsData) {
+          appState = JSON.parse(JSON.stringify(window.__SAVED_MESS_STATE__));
+        } else {
+          const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.monthsData) {
+              appState = parsed;
+            }
+          }
+        }
+
+        if (forceViewOnly) {
+          appState.isLockedViewOnly = true;
+        }
+      } catch (err) {
+        console.warn('Local state load fallback:', err);
+      }
+    }
+
+    cloudSaveCallback = function(stateToSave) {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateToSave));
+        setSyncStatus('saved', 'Saved (Reload Safe)');
+      } catch (err) {
+        console.warn('Local storage save warning:', err);
+        setSyncStatus('saved', 'Saved in Session');
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initDefaultState();
+      loadSavedLocalState();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
