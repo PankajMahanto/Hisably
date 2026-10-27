@@ -1,0 +1,511 @@
+{
+  "schemaVersion": "black_diamond_v5",
+  "lastUpdated": 1792871053712,
+  "messName": "Hisably",
+  "currentYear": 2026,
+  "currentMonth": 9,
+  "currency": "৳",
+  "managerPin": "1234",
+  "githubConfig": {
+    "owner": "PankajMahanto",
+    "repo": "Hisably",
+    "branch": "main"
+  },
+  "monthsData": {
+    "2026-10": {
+      "members": [
+        {
+          "id": "m1",
+          "name": "Pankaj Mahanta",
+          "role": "manager",
+          "email": "aryanpankaj78@gmail.com",
+          "phone": "N/A",
+          "specialPermission": "Manager (Full Control)",
+          "bazarDates": "Sat May 02 2026"
+        },
+        {
+          "id": "m2",
+          "name": "Masud Rana",
+          "role": "viewer",
+          "email": "mkmasudrana806@gmail.com",
+          "phone": "N/A",
+          "specialPermission": "No Permission",
+          "bazarDates": "No Bazar Date Set"
+        },
+        {
+          "id": "m3",
+          "name": "Md Leon Ahamed",
+          "role": "viewer",
+          "email": "leonahmead89@gmail.com",
+          "phone": "N/A",
+          "specialPermission": "No Permission",
+          "bazarDates": "No Bazar Date Set"
+        },
+        {
+          "id": "m4",
+          "name": "Aniruddha Kushol Kar",
+          "role": "editor",
+          "email": "aniruddhakushol12@gmail.com",
+          "phone": "N/A",
+          "specialPermission": "ম্যানেজার পরিবর্তন",
+          "bazarDates": "No Bazar Date Set"
+        }
+      ],
+      "meals": {
+        "1": {
+          "m1": 3,
+          "m2": 3,
+          "m3": 6,
+          "m4": 0
+        },
+        "2": {
+          "m1": 2,
+          "m2": 3,
+          "m3": 1,
+          "m4": 0
+        },
+        "3": {
+          "m1": 3,
+          "m2": 3,
+          "m3": 2,
+          "m4": 0
+        },
+        "4": {
+          "m1": 3,
+          "m2": 3,
+          "m3": 2,
+          "m4": 1
+        },
+        "5": {
+          "m1": 3,
+          "m2": 3,
+          "m3": 4,
+          "m4": 2
+        },
+        "6": {
+          "m1": 2,
+          "m2": 3,
+          "m3": 0,
+          "m4": 0
+        },
+        "7": {
+          "m1": 0,
+          "m2": 3,
+          "m3": 0,
+          "m4": 0
+        },
+        "8": {
+          "m1": 3,
+          "m2": 3,
+          "m3": 2,
+          "m4": 1
+        },
+        "9": {
+          "m1": 0,
+          "m2": 2,
+          "m3": 0,
+          "m4": 0
+        },
+        "10": {
+          "m1": 0,
+          "m2": 2,
+          "m3": 0,
+          "m4": 0
+        },
+        "11": {
+          "m1": 2,
+          "m2": 2,
+          "m3": 3,
+          "m4": 0
+        },
+        "12": {
+          "m1": 2,
+          "m2": 2,
+          "m3": 2,
+          "m4": 1
+        },
+        "13": {
+          "m1": 2,
+          "m2": 2,
+          "m3": 1,
+          "m4": 1
+        },
+        "14": {
+          "m1": 2,
+          "m2": 2,
+          "m3": 0,
+          "m4": 2
+        },
+        "15": {
+          "m1": 2,
+          "m2": 2,
+          "m3": 0,
+          "m4": 1
+        },
+        "16": {
+          "m1": 2,
+          "m2": 3,
+          "m3": 4,
+          "m4": 0
+        },
+        "17": {
+          "m1": 2,
+          "m2": 1,
+          "m3": 3,
+          "m4": 0
+        },
+        "18": {
+          "m1": 1,
+          "m2": 2,
+          "m3": 0,
+          "m4": 0
+        },
+        "19": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "20": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "21": {
+          "m1": 0,
+          "m2": 2,
+          "m3": 0,
+          "m4": 0
+        },
+        "22": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "23": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "24": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "25": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "26": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "27": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "28": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "29": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "30": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        },
+        "31": {
+          "m1": 0,
+          "m2": 0,
+          "m3": 0,
+          "m4": 0
+        }
+      },
+      "expenses": [
+        {
+          "id": "e1",
+          "date": "2026-10-01",
+          "type": "bazaar",
+          "memberId": "m1",
+          "shopper": "Pankaj Mahanta, Md Leon Ahamed",
+          "items": "Murgi, tel",
+          "amount": 460
+        },
+        {
+          "id": "e2",
+          "date": "2026-10-01",
+          "type": "bazaar",
+          "memberId": "m2",
+          "shopper": "Masud Rana, Pankaj Mahanta",
+          "items": "Bazar chaal, alu, dhal",
+          "amount": 800
+        },
+        {
+          "id": "e3",
+          "date": "2026-10-02",
+          "type": "bazaar",
+          "memberId": "m2",
+          "shopper": "Masud Rana",
+          "items": "2 haali dim, .5 kg vendi",
+          "amount": 150
+        },
+        {
+          "id": "e4",
+          "date": "2026-10-03",
+          "type": "bazaar",
+          "memberId": "m2",
+          "shopper": "Masud Rana, Pankaj Mahanta",
+          "items": "5kg alu, mach, polithin, piyas, morich, potol",
+          "amount": 740
+        },
+        {
+          "id": "e5",
+          "date": "2026-10-03",
+          "type": "bazaar",
+          "memberId": "m2",
+          "shopper": "Masud Rana, Pankaj Mahanta",
+          "items": "Light, majoni",
+          "amount": 120
+        },
+        {
+          "id": "e6",
+          "date": "2026-10-03",
+          "type": "bazaar",
+          "memberId": "m3",
+          "shopper": "Md Leon Ahamed, Aniruddha Kushol Kar",
+          "items": "Murgi, vimbar, dim",
+          "amount": 940
+        },
+        {
+          "id": "e7",
+          "date": "2026-10-03",
+          "type": "fixed",
+          "memberId": "m1",
+          "shopper": "Divided into 4 members (37.5 ৳ each)",
+          "items": "Polithin (Shared Other Cost)",
+          "amount": 150
+        },
+        {
+          "id": "e8",
+          "date": "2026-10-07",
+          "type": "bazaar",
+          "memberId": "m2",
+          "shopper": "Masud Rana, Pankaj Mahanta",
+          "items": "Chal 25kg, murgi, mach, mosalla, potol, mula, vendi",
+          "amount": 2330
+        },
+        {
+          "id": "e9",
+          "date": "2026-10-11",
+          "type": "bazaar",
+          "memberId": "m2",
+          "shopper": "Masud Rana",
+          "items": "Piyas, rosun, ada",
+          "amount": 220
+        },
+        {
+          "id": "e10",
+          "date": "2026-10-11",
+          "type": "bazaar",
+          "memberId": "m3",
+          "shopper": "Md Leon Ahamed",
+          "items": "Morich & holud gura",
+          "amount": 200
+        },
+        {
+          "id": "e11",
+          "date": "2026-10-13",
+          "type": "bazaar",
+          "memberId": "m3",
+          "shopper": "Md Leon Ahamed",
+          "items": "Murgi, tel, alu, dal, khachuri dhunia, lal shak, vara",
+          "amount": 745
+        },
+        {
+          "id": "e12",
+          "date": "2026-10-17",
+          "type": "bazaar",
+          "memberId": "m2",
+          "shopper": "Masud Rana",
+          "items": "Piyas .5 kg",
+          "amount": 30
+        },
+        {
+          "id": "e13",
+          "date": "2026-10-17",
+          "type": "bazaar",
+          "memberId": "m2",
+          "shopper": "Masud Rana",
+          "items": "4 ta dim",
+          "amount": 50
+        },
+        {
+          "id": "e14",
+          "date": "2026-10-17",
+          "type": "bazaar",
+          "memberId": "m4",
+          "shopper": "Aniruddha Kushol Kar",
+          "items": "Shak",
+          "amount": 30
+        },
+        {
+          "id": "e15",
+          "date": "2026-10-18",
+          "type": "bazaar",
+          "memberId": "m2",
+          "shopper": "Masud Rana",
+          "items": "Peyaj 2kg+alu 2kg=150, murgi 1.8kg=320, lobon 1kg=40, dal 1kg+4ta dim+tel 1kg=485, Sobji=70, Vara=20",
+          "amount": 1035
+        }
+      ],
+      "deposits": [
+        {
+          "id": "d1",
+          "date": "2026-10-01",
+          "memberId": "m3",
+          "amount": 460,
+          "note": "1st Oct Deposit"
+        },
+        {
+          "id": "d2",
+          "date": "2026-10-03",
+          "memberId": "m2",
+          "amount": 150,
+          "note": "3rd Oct Deposit"
+        },
+        {
+          "id": "d3",
+          "date": "2026-10-03",
+          "memberId": "m1",
+          "amount": 740,
+          "note": "3rd Oct Deposit"
+        },
+        {
+          "id": "d4",
+          "date": "2026-10-03",
+          "memberId": "m3",
+          "amount": 150,
+          "note": "3rd Oct Deposit"
+        },
+        {
+          "id": "d5",
+          "date": "2026-10-03",
+          "memberId": "m4",
+          "amount": 940,
+          "note": "3rd Oct Deposit"
+        },
+        {
+          "id": "d6",
+          "date": "2026-10-03",
+          "memberId": "m2",
+          "amount": 500,
+          "note": "3rd Oct Deposit"
+        },
+        {
+          "id": "d7",
+          "date": "2026-10-03",
+          "memberId": "m1",
+          "amount": 400,
+          "note": "3rd Oct Deposit"
+        },
+        {
+          "id": "d8",
+          "date": "2026-10-03",
+          "memberId": "m1",
+          "amount": 20,
+          "note": "3rd Oct Deposit"
+        },
+        {
+          "id": "d9",
+          "date": "2026-10-07",
+          "memberId": "m2",
+          "amount": 2000,
+          "note": "7th Oct Deposit"
+        },
+        {
+          "id": "d10",
+          "date": "2026-10-11",
+          "memberId": "m3",
+          "amount": 200,
+          "note": "11th Oct Deposit"
+        },
+        {
+          "id": "d11",
+          "date": "2026-10-11",
+          "memberId": "m2",
+          "amount": 220,
+          "note": "11th Oct Deposit"
+        },
+        {
+          "id": "d12",
+          "date": "2026-10-11",
+          "memberId": "m1",
+          "amount": 330,
+          "note": "11th Oct Deposit"
+        },
+        {
+          "id": "d13",
+          "date": "2026-10-13",
+          "memberId": "m3",
+          "amount": 745,
+          "note": "13th Oct Deposit"
+        },
+        {
+          "id": "d14",
+          "date": "2026-10-17",
+          "memberId": "m2",
+          "amount": 30,
+          "note": "17th Oct Deposit"
+        },
+        {
+          "id": "d15",
+          "date": "2026-10-17",
+          "memberId": "m2",
+          "amount": 50,
+          "note": "17th Oct Deposit"
+        },
+        {
+          "id": "d16",
+          "date": "2026-10-17",
+          "memberId": "m3",
+          "amount": 330,
+          "note": "17th Oct Deposit"
+        },
+        {
+          "id": "d17",
+          "date": "2026-10-18",
+          "memberId": "m2",
+          "amount": 735,
+          "note": "18th Oct Deposit"
+        }
+      ],
+      "logs": [
+        {
+          "id": "log_init_1",
+          "timestamp": "24 Oct 2026, 07:55:00 PM",
+          "actor": "Pankaj Mahanta (Manager)",
+          "category": "System Sync",
+          "details": "Imported Hisably (October) official records: 4 Members, 119.00 Total Meals, 8000.00 ৳ Total Deposit."
+        }
+      ]
+    }
+  }
+}

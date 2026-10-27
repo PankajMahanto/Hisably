@@ -188,9 +188,9 @@
         </div>
 
         <button onclick="openShareAndEmailModal()"
-          class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow transition animate-pulse"
-          title="GitHub Live Sync & Member Share Link">
-          <i class="fa-brands fa-github text-sm"></i> GitHub Live Link & Sync
+          class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow transition"
+          title="Firebase Live Sync, GitHub Sync & Member Share Link">
+          <i class="fa-solid fa-cloud-arrow-up text-sm"></i> Cloud Sync & Share
         </button>
 
         <button onclick="openPdfReportModal()"
@@ -213,25 +213,24 @@
 
     <!-- View-Only Mode Notice Banner -->
     <div id="viewOnlyBanner"
-      class="hidden bg-amber-50 border border-amber-300 rounded-xl p-3.5 flex-wrap items-center justify-between gap-3 shadow-sm no-print">
+      class="hidden bg-amber-50 border-2 border-amber-300 rounded-xl p-3.5 flex-wrap items-center justify-between gap-3 shadow-sm no-print">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center text-sm shadow">
-          <i class="fa-solid fa-eye"></i>
+        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-lg shadow shrink-0">
+          <i class="fa-solid fa-lock"></i>
         </div>
         <div>
-          <div class="text-xs font-bold text-amber-900 flex items-center gap-2">
-            <span>VIEW-ONLY MODE ACTIVE (মেম্বারদের জন্য শুধু দেখার মোড চালু আছে)</span>
+          <div class="text-xs font-bold text-amber-950 flex items-center gap-2">
+            <span>🔒 ভিউ-অনলি মোড সক্রিয় (VIEW-ONLY SECURE MODE)</span>
             <span id="activeViewerLabel"
-              class="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full text-[10px] font-bold">Viewer</span>
+              class="bg-amber-200 text-amber-900 px-2.5 py-0.5 rounded-full text-[10px] font-bold">সদস্য মোড</span>
           </div>
-          <p class="text-[11px] text-amber-700">সাধারণ মেম্বাররা শুধু হিসাব দেখতে পারবে, এডিট করতে পারবে না। ম্যানেজার
-            এডিট করতে চাইলে PIN দিন।</p>
+          <p class="text-[11px] text-amber-800 mt-0.5">সাধারণ মেম্বাররা শুধু হিসাব দেখতে পারবেন, এডিট করতে পারবেন না। আপনি মেস ম্যানেজার (Pankaj Mahanta) হলে PIN দিয়ে এডিট মোড আনলক করুন।</p>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 shrink-0">
         <button onclick="openPinUnlockModal()"
-          class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg shadow-sm flex items-center gap-1.5 transition">
-          <i class="fa-solid fa-key"></i> Unlock with Manager PIN
+          class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer">
+          <i class="fa-solid fa-key"></i> Manager Login (আনলক)
         </button>
       </div>
     </div>
@@ -843,19 +842,51 @@
         </div>
       </div>
 
-      <!-- Step 2: GitHub Live Auto-Sync Configuration -->
+      <!-- Step 2: Firebase Realtime Cloud Sync (Zero-token live sync) -->
+      <div class="bg-amber-50 border-2 border-amber-400 rounded-xl p-4 space-y-3 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="font-bold text-amber-950 flex items-center gap-2 text-sm">
+            <i class="fa-solid fa-fire text-amber-600"></i>
+            ২. গুগল Firebase রিয়েলটাইম ক্লাউড সিঙ্ক (সব ডিভাইসে লাইভ অটো-সিঙ্ক - সর্বাধিক প্রস্তাবিত):
+          </div>
+          <span id="fbSyncStatusPill"
+            class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Not Connected</span>
+        </div>
+        <p class="text-slate-700 leading-relaxed">
+          কোনো GitHub টোকেনের ঝামেলা ছাড়া আপনার মেসের ডাটা ল্যাপটপ, ফোন ও সব মেম্বারের ডিভাইসে অটোমেটিক রিয়েল-টাইমে সিঙ্ক করতে নিচে আপনার Firebase Realtime Database URL টি দিন:
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <input type="url" id="fbUrlInput" placeholder="https://your-mess-default-rtdb.firebaseio.com"
+            class="flex-1 px-3 py-2 rounded-lg border border-amber-300 bg-white mono text-xs focus:ring-2 focus:ring-amber-500" />
+          <button onclick="saveAndTestFirebaseSync()" id="fbConnectBtn"
+            class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 rounded-lg shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Save & Live Sync
+          </button>
+        </div>
+        <details class="text-[11px] text-amber-950 bg-amber-100/70 p-2.5 rounded-lg cursor-pointer">
+          <summary class="font-bold">👉 ১ মিনিটে কীভাবে সম্পূর্ণ ফ্রি Firebase Database চালু করবেন? (এখানে ক্লিক করুন)</summary>
+          <ol class="list-decimal ml-4 mt-2 space-y-1 text-slate-700">
+            <li><strong>console.firebase.google.com</strong> এ গিয়ে আপনার Gmail দিয়ে লগইন করুন এবং <em>Add project</em> চাপুন।</li>
+            <li>প্রজেক্ট নাম দিন <em>Hisably</em> এবং তৈরি করুন।</li>
+            <li>বাম পাশের মেনু থেকে <strong>Build &gt; Realtime Database</strong> এ ক্লিক করে <em>Create Database</em> চাপুন।</li>
+            <li>Security Rules এ <strong>Start in test mode</strong> সিলেক্ট করে Enable দিন।</li>
+            <li>উপরে থাকা ডাটাবেজ লিংকটি (যেমন: <code>https://...firebaseio.com</code>) কপি করে উপরের ঘরে পেস্ট করে "Save & Live Sync" চাপুন। ব্যস! সব ডিভাইসে অটো সিঙ্ক হবে!</li>
+          </ol>
+        </details>
+      </div>
+
+      <!-- Step 3: GitHub Live Auto-Sync Configuration -->
       <div class="bg-indigo-50 border-2 border-indigo-400 rounded-xl p-4 space-y-3 text-xs">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="font-bold text-indigo-950 flex items-center gap-2 text-sm">
-            <i class="fa-solid fa-cloud-bolt text-indigo-600"></i>
-            ২. ল্যাপটপ থেকে এডিট করলে ফোনে অটো আপডেট হওয়ার কানেকশন (GitHub Live Sync):
+            <i class="fa-brands fa-github text-slate-900"></i>
+            ৩. GitHub Repo Auto-Sync (বিকল্প):
           </div>
           <span id="ghSyncStatusPill"
             class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">Not Connected</span>
         </div>
         <p class="text-slate-700 leading-relaxed">
-          আপনি ল্যাপটপে বসে মিল বা বাজার এডিট করলেই যেন ফোনের লিংকেও সাথে সাথে আপডেট দেখায়, তার জন্য নিচে আপনার GitHub
-          Repo ইনফো ও Token দিয়ে একবার কানেক্ট করে রাখুন:
+          GitHub এর <code>mess_data.json</code> ফাইলে সরাসরি কমিট করতে চাইলে আপনার GitHub Repo ও Personal Access Token দিতে পারেন:
         </p>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -879,16 +910,36 @@
         <div>
           <label class="font-semibold text-slate-700 block mb-1">
             GitHub Personal Access Token (Classic <code>repo</code> scope) — <span
-              class="text-emerald-700 font-normal">শুধু আপনার ব্রাউজারে সংরক্ষিত থাকবে</span>
+              class="text-emerald-700 font-normal">শুধু আপনার এই ডিভাইসের ব্রাউজারে থাকবে</span>
           </label>
           <div class="flex flex-wrap gap-2">
             <input type="password" id="ghTokenInput" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
               class="flex-1 px-2.5 py-1.5 rounded-lg border border-indigo-200 bg-white mono text-xs" />
             <button onclick="saveAndTestGitHubSync()" id="ghConnectBtn"
               class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-1.5 rounded-lg shadow transition flex items-center gap-1.5">
-              <i class="fa-solid fa-plug-circle-check"></i> Connect & Auto-Sync
+              <i class="fa-solid fa-plug-circle-check"></i> Connect GitHub
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Step 4: JSON Backup & Restore -->
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3 text-xs">
+        <div class="font-bold text-blue-950 flex items-center gap-2 text-sm">
+          <i class="fa-solid fa-file-export text-blue-600"></i>
+          ৪. সম্পূর্ণ ডাটা ব্যাকআপ ডাউনলোড ও রিস্টোর (JSON File):
+        </div>
+        <p class="text-slate-600">
+          যেকোনো সময় সমস্ত মিল, বাজার ও জমা খরচের পূর্ণাঙ্গ ব্যাকআপ ফাইল ডাউনলোড করে রাখতে পারেন অথবা ব্যাকআপ ফাইল আপলোড করে এক সেকেন্ডে সমস্ত হিসাব ফিরিয়ে আনতে পারেন।
+        </p>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="downloadBackupJson()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-lg shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-download"></i> Download Full Backup (.json)
+          </button>
+          <label class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-semibold px-4 py-2 rounded-lg shadow-sm cursor-pointer flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-upload text-blue-600"></i> Restore from Backup (.json)
+            <input type="file" id="backupJsonFileInput" accept=".json" onchange="importBackupJson(event)" class="hidden" />
+          </label>
         </div>
       </div>
 
@@ -1168,18 +1219,23 @@
     ];
     const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const DATA_SCHEMA_VERSION = 'black_diamond_v5';
+    const MANAGER_AUTH_KEY = 'hisably_device_manager_auth';
+    let localSimulatedViewerId = 'admin';
 
     let appState = {
       schemaVersion: DATA_SCHEMA_VERSION,
-      lastUpdated: 1761336000000,
+      lastUpdated: 1792871100000,
       messName: 'Hisably',
       currentYear: 2026,
       currentMonth: 9, // October (0-indexed)
       currency: '৳',
-      isLockedViewOnly: false,
+      isLockedViewOnly: true,
       managerPin: '1234',
       activeViewerId: 'admin',
       autoEmailPrompt: true,
+      cloudConfig: {
+        firebaseUrl: ''
+      },
       githubConfig: {
         owner: 'PankajMahanto',
         repo: 'Hisably',
@@ -1187,6 +1243,24 @@
       },
       monthsData: {}
     };
+
+    function isManagerAuthenticated() {
+      try {
+        return localStorage.getItem(MANAGER_AUTH_KEY) === 'true';
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function setManagerAuthenticated(auth) {
+      try {
+        if (auth) {
+          localStorage.setItem(MANAGER_AUTH_KEY, 'true');
+        } else {
+          localStorage.removeItem(MANAGER_AUTH_KEY);
+        }
+      } catch (e) {}
+    }
 
     let cloudSaveCallback = null;
     let saveDebounceTimer = null;
@@ -1207,8 +1281,8 @@
 
     function getActiveActorName() {
       const monthObj = getCurrentMonthObj();
-      if (appState.activeViewerId && appState.activeViewerId !== 'admin') {
-        const found = monthObj.members.find(m => m.id === appState.activeViewerId);
+      if (localSimulatedViewerId && localSimulatedViewerId !== 'admin') {
+        const found = monthObj.members.find(m => m.id === localSimulatedViewerId);
         if (found) return found.name;
       }
       return 'Pankaj Mahanta (Manager)';
@@ -1245,15 +1319,25 @@
     }
 
     function canCurrentUserEdit() {
-      // If global lock or active viewer is restricted
+      // 1. If explicit viewonly query parameter
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('mode') === 'viewonly') return false;
+
+      // 2. MUST be manager authenticated on this specific device
+      if (!isManagerAuthenticated()) return false;
+
+      // 3. If manager locked the sheet
       if (appState.isLockedViewOnly) return false;
-      if (!appState.activeViewerId || appState.activeViewerId === 'admin') return true;
-      const monthObj = getCurrentMonthObj();
-      const mem = monthObj.members.find(m => m.id === appState.activeViewerId);
-      if (!mem) return false;
-      return mem.role === 'editor' || mem.role === 'manager';
+
+      // 4. If simulator active in access control modal
+      if (localSimulatedViewerId && localSimulatedViewerId !== 'admin') {
+        const monthObj = getCurrentMonthObj();
+        const mem = monthObj.members.find(m => m.id === localSimulatedViewerId);
+        if (!mem) return false;
+        return mem.role === 'editor' || mem.role === 'manager';
+      }
+
+      return true;
     }
 
     function getMonthKey(year = appState.currentYear, month = appState.currentMonth) {
@@ -1701,32 +1785,50 @@
       const viewerLabel = document.getElementById('activeViewerLabel');
 
       let viewerName = 'Pankaj Mahanta (Manager)';
-      if (appState.activeViewerId && appState.activeViewerId !== 'admin') {
-        const found = monthObj.members.find(m => m.id === appState.activeViewerId);
+      if (localSimulatedViewerId && localSimulatedViewerId !== 'admin') {
+        const found = monthObj.members.find(m => m.id === localSimulatedViewerId);
         if (found) viewerName = `${found.name} (${found.role === 'viewer' ? 'View-Only' : 'Editor'})`;
+      } else if (!isManagerAuthenticated()) {
+        viewerName = 'সদস্য মোড (View-Only)';
       } else if (appState.isLockedViewOnly) {
-        viewerName = 'Locked for Members (View-Only)';
+        viewerName = 'Locked (View-Only)';
       }
 
       if (!editable) {
-        banner.classList.remove('hidden');
-        banner.classList.add('flex');
-        viewerLabel.textContent = viewerName;
+        if (banner) {
+          banner.classList.remove('hidden');
+          banner.classList.add('flex');
+        }
+        if (viewerLabel) viewerLabel.textContent = viewerName;
 
-        statusBtn.className = 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition';
-        statusText.innerHTML = `<i class="fa-solid fa-eye mr-1"></i> View-Only`;
+        if (statusBtn) {
+          statusBtn.className = 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer';
+          statusBtn.title = 'View-Only Mode: এডিট করতে Manager Login চাপুন';
+        }
+        if (statusText) statusText.innerHTML = `<i class="fa-solid fa-lock mr-1"></i> View-Only`;
 
-        quickLockBtn.className = 'bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow transition';
-        quickLockBtnText.textContent = 'Unlock Edit';
+        if (quickLockBtn) {
+          quickLockBtn.className = 'bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 shadow transition cursor-pointer';
+          quickLockBtn.title = 'ম্যানেজার পিন দিয়ে এডিট মোড আনলক করুন';
+        }
+        if (quickLockBtnText) quickLockBtnText.innerHTML = `<i class="fa-solid fa-key mr-1"></i> Manager Login`;
       } else {
-        banner.classList.add('hidden');
-        banner.classList.remove('flex');
+        if (banner) {
+          banner.classList.add('hidden');
+          banner.classList.remove('flex');
+        }
 
-        statusBtn.className = 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition';
-        statusText.innerHTML = `Editable (${viewerName.split(' ')[0]})`;
+        if (statusBtn) {
+          statusBtn.className = 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer';
+          statusBtn.title = 'Manager Mode Active: সকল হিসাব পরিবর্তন করা যাবে';
+        }
+        if (statusText) statusText.innerHTML = `<i class="fa-solid fa-crown text-amber-400 mr-1"></i> Manager Mode`;
 
-        quickLockBtn.className = 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition';
-        quickLockBtnText.textContent = 'Lock (View-Only)';
+        if (quickLockBtn) {
+          quickLockBtn.className = 'bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition cursor-pointer';
+          quickLockBtn.title = 'ভিউ-অনলি মোডে লক করুন';
+        }
+        if (quickLockBtnText) quickLockBtnText.innerHTML = `<i class="fa-solid fa-lock mr-1"></i> Lock Sheet`;
       }
 
       document.querySelectorAll('.edit-only-control').forEach(el => {
@@ -2238,6 +2340,10 @@
     }
 
     function openAccessControlModal() {
+      if (!isManagerAuthenticated()) {
+        openPinUnlockModal();
+        return;
+      }
       renderAccessControlModalContent();
       const modal = document.getElementById('accessControlModal');
       modal.classList.remove('hidden');
@@ -2260,46 +2366,44 @@
       const pinBox = document.getElementById('managerPinSettingsBox');
 
       if (editable) {
-        desc.textContent = 'Sheet is currently UNLOCKED (Manager mode)';
+        desc.textContent = 'শিট বর্তমানে UNLOCKED (আপনি ফুল এডিট করতে পারছেন)';
         toggleBtn.textContent = 'Lock Sheet (View-Only)';
-        toggleBtn.className = 'px-3 py-1.5 rounded-lg font-semibold bg-amber-600 text-white hover:bg-amber-500 transition';
+        toggleBtn.className = 'px-3 py-1.5 rounded-lg font-semibold bg-amber-600 text-white hover:bg-amber-500 transition cursor-pointer';
         pinBox.classList.remove('hidden');
       } else {
-        desc.textContent = 'Sheet is LOCKED in View-Only mode';
+        desc.textContent = 'শিট বর্তমানে LOCKED (View-Only মোড সক্রিয়)';
         toggleBtn.textContent = 'Unlock with Manager PIN';
-        toggleBtn.className = 'px-3 py-1.5 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-500 transition';
+        toggleBtn.className = 'px-3 py-1.5 rounded-lg font-semibold bg-emerald-600 text-white hover:bg-emerald-500 transition cursor-pointer';
         pinBox.classList.add('hidden');
       }
 
       const simSelect = document.getElementById('activeUserSimulator');
-      let simHtml = `<option value="admin" ${appState.activeViewerId === 'admin' ? 'selected' : ''}>👑 Pankaj Mahanta (Manager)</option>`;
+      let simHtml = `<option value="admin" ${localSimulatedViewerId === 'admin' ? 'selected' : ''}>👑 Pankaj Mahanta (Manager - Full Access)</option>`;
       monthObj.members.forEach(m => {
         const isEditor = m.role === 'editor' || m.role === 'manager';
-        simHtml += `<option value="${m.id}" ${appState.activeViewerId === m.id ? 'selected' : ''}>${isEditor ? '✍️' : '👁️'} ${m.name}</option>`;
+        simHtml += `<option value="${m.id}" ${localSimulatedViewerId === m.id ? 'selected' : ''}>${isEditor ? '✍️' : '👁️'} ${m.name} (${isEditor ? 'Can Edit' : 'View-Only'})</option>`;
       });
       simSelect.innerHTML = simHtml;
     }
 
     function switchSimulatedUser(userId) {
-      if (userId === 'admin' && !canCurrentUserEdit()) {
+      if (userId === 'admin' && !isManagerAuthenticated()) {
         closeAccessControlModal();
         openPinUnlockModal();
         return;
       }
-      appState.activeViewerId = userId;
-      if (userId === 'admin') appState.isLockedViewOnly = false;
-      saveState();
+      localSimulatedViewerId = userId;
       renderAll();
       renderAccessControlModalContent();
     }
 
     function toggleQuickLock() {
       if (canCurrentUserEdit()) {
+        setManagerAuthenticated(false);
         appState.isLockedViewOnly = true;
-        saveState();
         renderAll();
         if (!document.getElementById('accessControlModal').classList.contains('hidden')) renderAccessControlModalContent();
-        showToast('Sheet Locked in View-Only Mode!', false, false);
+        showToast('🔒 শিট লক করা হয়েছে (View-Only সক্রিয়)!', false, false);
       } else {
         closeAccessControlModal();
         openPinUnlockModal();
@@ -2309,10 +2413,13 @@
     function saveManagerPin() {
       if (!requireEditPermission()) return;
       const val = document.getElementById('managerPinInput').value.trim();
-      if (!val) return;
+      if (!val) {
+        showToast('PIN খালি রাখা যাবে না!', false, false);
+        return;
+      }
       appState.managerPin = val;
       saveState();
-      showToast('Manager PIN saved!', false, false);
+      showToast('Manager PIN সংরক্ষিত ও সিঙ্ক হয়েছে!', false, false);
     }
 
     function openPinUnlockModal() {
@@ -2334,12 +2441,12 @@
       e.preventDefault();
       const entered = document.getElementById('unlockPinField').value.trim();
       if (entered === (appState.managerPin || '1234')) {
+        setManagerAuthenticated(true);
         appState.isLockedViewOnly = false;
-        appState.activeViewerId = 'admin';
-        saveState();
+        localSimulatedViewerId = 'admin';
         closePinUnlockModal();
         renderAll();
-        showToast('Manager Mode Unlocked!', false, false);
+        showToast('👑 ম্যানেজার মোড আনলক হয়েছে! এখন আপনি এডিট করতে পারবেন।', false, false);
       } else {
         document.getElementById('pinErrorMsg').classList.remove('hidden');
       }
@@ -2616,7 +2723,7 @@
       });
     }
 
-    // GITHUB AUTO-SYNC & SHARING
+    // CLOUD & GITHUB AUTO-SYNC & SHARING
     const GH_TOKEN_STORAGE_KEY = 'hisably_gh_token_v1';
 
     function openShareAndEmailModal() {
@@ -2632,6 +2739,11 @@
       document.getElementById('ghBranchInput').value = appState.githubConfig?.branch || 'main';
       document.getElementById('ghTokenInput').value = localStorage.getItem(GH_TOKEN_STORAGE_KEY) || '';
 
+      if (document.getElementById('fbUrlInput')) {
+        document.getElementById('fbUrlInput').value = appState.cloudConfig?.firebaseUrl || '';
+      }
+
+      updateFirebaseSyncPill();
       updateGitHubSyncPill();
 
       const dir = document.getElementById('memberEmailDirectory');
@@ -2656,9 +2768,133 @@
     function copyPublicMemberLink() {
       const link = document.getElementById('publicMemberLinkInput').value;
       copyText(link);
-      showToast('Member link copied! মেম্বাররা এই লিংকে শুধু হিসাব দেখতে পারবে।', false, false);
+      showToast('📋 মেম্বার ভিউ-অনলি লিংক কপি হয়েছে! মেম্বাররা এই লিংকে শুধু হিসাব দেখতে পারবে।', false, false);
     }
 
+    // FIREBASE REALTIME DB SYNC
+    function getCleanFirebaseUrl(url) {
+      if (!url) return '';
+      let u = url.trim();
+      if (u.endsWith('/')) u = u.slice(0, -1);
+      if (u.endsWith('.json')) u = u.slice(0, -5);
+      return u;
+    }
+
+    function updateFirebaseSyncPill() {
+      const pill = document.getElementById('fbSyncStatusPill');
+      if (!pill) return;
+      const fbUrl = appState.cloudConfig?.firebaseUrl;
+      if (fbUrl) {
+        pill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900';
+        pill.textContent = `Connected & Active`;
+      } else {
+        pill.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700';
+        pill.textContent = `Not Connected`;
+      }
+    }
+
+    async function saveAndTestFirebaseSync() {
+      if (!requireEditPermission()) return;
+      const rawUrl = document.getElementById('fbUrlInput').value.trim();
+      const cleanUrl = getCleanFirebaseUrl(rawUrl);
+
+      if (!cleanUrl) {
+        if (!appState.cloudConfig) appState.cloudConfig = {};
+        appState.cloudConfig.firebaseUrl = '';
+        updateFirebaseSyncPill();
+        saveState(true);
+        showToast('Firebase URL সরানো হয়েছে!', false, false);
+        return;
+      }
+
+      if (!appState.cloudConfig) appState.cloudConfig = {};
+      appState.cloudConfig.firebaseUrl = cleanUrl;
+
+      const btn = document.getElementById('fbConnectBtn');
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Testing...`;
+
+      const ok = await pushToFirebase(appState);
+      btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Save & Live Sync`;
+
+      if (ok) {
+        updateFirebaseSyncPill();
+        saveState(true);
+        showToast('🔥 Firebase সফলভাবে কানেক্ট হয়েছে! এখন যেকোনো ডিভাইসে এডিট করলে সব ফোনে সাথে সাথে সিঙ্ক হবে।', false, false);
+      } else {
+        showToast('❌ Firebase কানেকশন ব্যর্থ হয়েছে। URL ঠিক আছে কিনা এবং Rules এ Start in test mode চালু আছে কিনা চেক করুন।', false, false);
+      }
+    }
+
+    async function pushToFirebase(stateObj) {
+      const fbUrl = getCleanFirebaseUrl(stateObj.cloudConfig?.firebaseUrl);
+      if (!fbUrl) return false;
+      try {
+        const payload = JSON.parse(JSON.stringify(stateObj));
+        delete payload.isDeviceManager;
+        const res = await fetch(`${fbUrl}/hisably_mess_data.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        return res.ok;
+      } catch (e) {
+        console.warn('Firebase push warning:', e);
+        return false;
+      }
+    }
+
+    async function fetchFromFirebase() {
+      const fbUrl = getCleanFirebaseUrl(appState.cloudConfig?.firebaseUrl);
+      if (!fbUrl) return null;
+      try {
+        const res = await fetch(`${fbUrl}/hisably_mess_data.json?t=${Date.now()}`);
+        if (res.ok) {
+          return await res.json();
+        }
+      } catch (e) {
+        console.warn('Firebase fetch warning:', e);
+      }
+      return null;
+    }
+
+    // BACKUP & RESTORE
+    function downloadBackupJson() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.setAttribute("download", `hisably_backup_${dateStr}.json`);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      showToast('📥 ব্যাকআপ ফাইল ডাউনলোড সম্পন্ন হয়েছে!', false, false);
+    }
+
+    function importBackupJson(event) {
+      if (!requireEditPermission()) return;
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && imported.monthsData) {
+            imported.lastUpdated = Date.now();
+            appState = imported;
+            saveState();
+            renderAll();
+            showToast('📤 ব্যাকআপ সফলভাবে ইম্পোর্ট ও সিঙ্ক হয়েছে!', false, false);
+          } else {
+            showToast('❌ ভুল ফাইল! সঠিক Hisably JSON ব্যাকআপ ফাইল নির্বাচন করুন।', false, false);
+          }
+        } catch (err) {
+          showToast('❌ ফাইল প্রসেস করতে ব্যর্থ হয়েছে!', false, false);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // GITHUB SYNC
     function updateGitHubSyncPill() {
       const pill = document.getElementById('ghSyncStatusPill');
       if (!pill) return;
@@ -2673,6 +2909,7 @@
     }
 
     async function saveAndTestGitHubSync() {
+      if (!requireEditPermission()) return;
       const owner = document.getElementById('ghOwnerInput').value.trim();
       const repo = document.getElementById('ghRepoInput').value.trim();
       const branch = document.getElementById('ghBranchInput').value.trim() || 'main';
@@ -2689,7 +2926,7 @@
         const btn = document.getElementById('ghConnectBtn');
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Syncing...`;
         const ok = await pushStateToGitHubRepo(appState);
-        btn.innerHTML = `<i class="fa-solid fa-plug-circle-check"></i> Connect & Auto-Sync`;
+        btn.innerHTML = `<i class="fa-solid fa-plug-circle-check"></i> Connect GitHub`;
         if (ok) {
           showToast('GitHub connected! এখন ল্যাপটপে এডিট করলে ফোনেও অটো আপডেট হবে।', false, false);
         } else {
@@ -2702,8 +2939,8 @@
 
     let ghPushInProgress = false;
     async function pushStateToGitHubRepo(stateObj) {
-      const owner = stateObj.githubConfig?.owner;
-      const repo = stateObj.githubConfig?.repo;
+      const owner = stateObj.githubConfig?.owner || 'PankajMahanto';
+      const repo = stateObj.githubConfig?.repo || 'Hisably';
       const branch = stateObj.githubConfig?.branch || 'main';
       const token = localStorage.getItem(GH_TOKEN_STORAGE_KEY);
       if (!owner || !repo || !token || ghPushInProgress) return false;
@@ -2743,34 +2980,67 @@
       }
     }
 
-    async function fetchLatestStateFromGitHub() {
-      const owner = appState.githubConfig?.owner;
-      const repo = appState.githubConfig?.repo;
-      const branch = appState.githubConfig?.branch || 'main';
-      if (!owner || !repo) return;
+    let isCloudFetching = false;
+    async function fetchLatestCloudState() {
+      if (isCloudFetching) return;
+      isCloudFetching = true;
 
-      const urls = [
-        `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/mess_data.json?t=${Date.now()}`,
-        `./mess_data.json?t=${Date.now()}`
-      ];
+      try {
+        let remoteState = null;
 
-      for (const url of urls) {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) continue;
-          const remoteState = await res.json();
-          if (remoteState && remoteState.monthsData) {
-            const remoteTime = Number(remoteState.lastUpdated) || 0;
-            const localTime = Number(appState.lastUpdated) || 0;
-            if (remoteTime > localTime) {
-              appState = remoteState;
-              localStorage.setItem('hisably_pro_state_v5', JSON.stringify(appState));
-              renderAll();
-              setSyncStatus('saved', 'Live Synced');
-            }
-            return;
+        // 1. Try Firebase if configured
+        if (appState.cloudConfig?.firebaseUrl) {
+          remoteState = await fetchFromFirebase();
+        }
+
+        // 2. Try repo mess_data.json & raw GitHub
+        if (!remoteState || !remoteState.monthsData) {
+          const owner = appState.githubConfig?.owner || 'PankajMahanto';
+          const repo = appState.githubConfig?.repo || 'Hisably';
+          const branch = appState.githubConfig?.branch || 'main';
+          const urls = [
+            `./mess_data.json?t=${Date.now()}`,
+            `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/mess_data.json?t=${Date.now()}`
+          ];
+
+          for (const url of urls) {
+            try {
+              const res = await fetch(url);
+              if (!res.ok) continue;
+              const parsed = await res.json();
+              if (parsed && parsed.monthsData && Object.keys(parsed.monthsData).length > 0) {
+                remoteState = parsed;
+                break;
+              }
+            } catch (e) { }
           }
-        } catch (e) { }
+        }
+
+        if (remoteState && remoteState.monthsData) {
+          const remoteTime = Number(remoteState.lastUpdated) || 0;
+          const localTime = Number(appState.lastUpdated) || 0;
+
+          // If remote is strictly newer, update local state
+          if (remoteTime > localTime) {
+            const preservedFbUrl = appState.cloudConfig?.firebaseUrl;
+            appState = remoteState;
+            if (!appState.cloudConfig) appState.cloudConfig = {};
+            if (preservedFbUrl && !appState.cloudConfig.firebaseUrl) {
+              appState.cloudConfig.firebaseUrl = preservedFbUrl;
+            }
+
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appState));
+            renderAll();
+            setSyncStatus('saved', 'Live Synced');
+          } else if (localTime > remoteTime && canCurrentUserEdit()) {
+            // Local is newer and we are manager: auto-sync local changes to cloud
+            cloudSaveCallback(appState);
+          }
+        }
+      } catch (err) {
+        console.warn('Cloud sync fetch error:', err);
+      } finally {
+        isCloudFetching = false;
       }
     }
 
@@ -2855,23 +3125,42 @@
     }
 
     const LOCAL_STORAGE_KEY = 'hisably_pro_state_v5';
+    const LEGACY_STORAGE_KEYS = ['hisably_pro_state_v5', 'black_diamond_mess_pro_state_v3', 'hisably_pro_state_v4'];
 
     function loadSavedState() {
       try {
-        const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed && parsed.monthsData) appState = parsed;
+        for (const k of LEGACY_STORAGE_KEYS) {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.monthsData && Object.keys(parsed.monthsData).length > 0) {
+              appState = parsed;
+              break;
+            }
+          }
         }
-      } catch (e) { }
+      } catch (e) {
+        console.warn('loadSavedState error:', e);
+      }
     }
 
     cloudSaveCallback = function (stateToSave) {
       try {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateToSave));
-        setSyncStatus('saved', 'Auto Saved & Synced');
+        setSyncStatus('saved', 'Auto Saved Locally');
+
+        // Auto push to Firebase if configured
+        if (stateToSave.cloudConfig?.firebaseUrl) {
+          pushToFirebase(stateToSave).then(ok => {
+            if (ok) setSyncStatus('saved', 'Firebase Live Synced');
+          });
+        }
+
+        // Auto push to GitHub if token exists
         if (stateToSave.githubConfig?.owner && localStorage.getItem(GH_TOKEN_STORAGE_KEY)) {
-          pushStateToGitHubRepo(stateToSave);
+          pushStateToGitHubRepo(stateToSave).then(ok => {
+            if (ok) setSyncStatus('saved', 'GitHub Live Synced');
+          });
         }
       } catch (e) {
         setSyncStatus('saved', 'Saved Locally');
@@ -2882,7 +3171,21 @@
       loadSavedState();
       initDefaultState();
       renderAll();
-      fetchLatestStateFromGitHub();
+      fetchLatestCloudState();
+
+      // Poll cloud every 15 seconds to receive updates from other devices automatically
+      setInterval(() => {
+        const active = document.activeElement;
+        const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+        if (!isTyping) {
+          fetchLatestCloudState();
+        }
+      }, 15000);
+
+      // Auto fetch latest when window gets focus (user returns to tab)
+      window.addEventListener('focus', () => {
+        fetchLatestCloudState();
+      });
     });
   </script>
 </body>
